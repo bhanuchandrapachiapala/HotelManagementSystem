@@ -1,11 +1,11 @@
 interface SubmitButtonProps {
-  allChecked: boolean
+  hasSelection: boolean
   isLoading: boolean
   onClick: () => void
 }
 
-export default function SubmitButton({ allChecked, isLoading, onClick }: SubmitButtonProps) {
-  const enabled = allChecked && !isLoading
+export default function SubmitButton({ hasSelection, isLoading, onClick }: SubmitButtonProps) {
+  const enabled = hasSelection && !isLoading
 
   return (
     <button
@@ -18,7 +18,7 @@ export default function SubmitButton({ allChecked, isLoading, onClick }: SubmitB
           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
       }`}
     >
-      {isLoading ? 'Submitting…' : 'Submit Daily Checklist'}
+      {isLoading ? 'Saving…' : 'Save Progress'}
     </button>
   )
 }

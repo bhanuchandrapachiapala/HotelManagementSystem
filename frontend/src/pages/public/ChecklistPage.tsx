@@ -12,13 +12,16 @@ export default function ChecklistPage() {
 
   const [checked, setChecked] = useState<Set<string>>(new Set())
   const [initialized, setInitialized] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [allComplete, setAllComplete] = useState(false)
+  const [savedCount, setSavedCount] = useState(0)
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   if (todayData && !initialized) {
     setChecked(new Set(todayData.task_ids))
+    setSavedCount(todayData.completed_count)
     setInitialized(true)
-    if (todayData.completed_count === 6) setSubmitted(true)
+    if (todayData.completed_count === 6) setAllComplete(true)
   }
 
   function toggle(taskId: string) {
@@ -33,20 +36,26 @@ export default function ChecklistPage() {
   async function handleSubmit() {
     setError(null)
     try {
-      await submitMutation.mutateAsync({ date: getToday(), taskIds: Array.from(checked) })
-      setSubmitted(true)
+      const result = await submitMutation.mutateAsync({ date: getToday(), taskIds: Array.from(checked) })
+      setSavedCount(result.completed_count)
+      setLastSavedAt(
+        new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      )
+      if (checked.size === 6) setAllComplete(true)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
     }
   }
 
   const todayStr = formatDate(new Date())
+  // Show the "X of 6 saved" note on page load when there's a partial save from a previous session
+  const showSavedNote = initialized && savedCount > 0 && savedCount < 6 && !lastSavedAt
 
-  if (submitted) {
+  if (allComplete) {
     return (
       <div className="min-h-screen bg-[#F8F7F5] flex flex-col items-center justify-center px-4">
         <div className="bg-white rounded-card shadow-sm border border-gray-100 p-10 max-w-sm w-full text-center">
-          <div className="w-18 h-18 rounded-full bg-green-light flex items-center justify-center mx-auto mb-5" style={{ width: 72, height: 72 }}>
+          <div className="rounded-full bg-green-light flex items-center justify-center mx-auto mb-5" style={{ width: 72, height: 72 }}>
             <span className="text-4xl">✅</span>
           </div>
           <h2 className="font-display text-2xl font-bold mb-2">All done for today!</h2>
@@ -78,7 +87,14 @@ export default function ChecklistPage() {
         ) : (
           <div className="bg-white rounded-card shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100">
-              <span className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Today's Tasks</span>
+              <span className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">
+                Today's Tasks
+              </span>
+              {showSavedNote && (
+                <p className="text-xs text-orange font-semibold mt-1">
+                  {savedCount} of 6 tasks saved — complete the rest and save again
+                </p>
+              )}
             </div>
 
             <div className="divide-y divide-gray-100">
@@ -104,10 +120,14 @@ export default function ChecklistPage() {
               )}
 
               <SubmitButton
-                allChecked={checked.size === 6}
+                hasSelection={checked.size > 0}
                 isLoading={submitMutation.isPending}
                 onClick={handleSubmit}
               />
+
+              {lastSavedAt && (
+                <p className="text-xs text-gray-400 text-center mt-2">Last saved at {lastSavedAt}</p>
+              )}
             </div>
           </div>
         )}
