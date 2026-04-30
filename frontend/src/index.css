@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-orange:        #F47920;
+  --color-orange-dark:   #C95E10;
+  --color-orange-light:  #FEF0E6;
+  --color-yellow:        #FDB924;
+  --color-yellow-light:  #FFF8E7;
+
+  --color-black:         #1A1A1A;
+  --color-gray-dark:     #4A4A4A;
+  --color-gray-mid:      #888888;
+  --color-gray-light:    #E8E8E8;
+  --color-gray-bg:       #F8F7F5;
+  --color-white:         #FFFFFF;
+
+  --color-green:         #2D8653;
+  --color-green-light:   #E8F5EE;
+  --color-red:           #D64045;
+  --color-red-light:     #FDEEEE;
+  --color-blue:          #1A6FAB;
+  --color-blue-light:    #E8F0FB;
+
+  --color-sidebar-bg:    #1A1A1A;
+  --color-sidebar-text:  rgba(255,255,255,0.55);
+  --color-sidebar-active-bg: rgba(244,121,32,0.12);
+  --color-sidebar-active-text: #F47920;
+  --color-sidebar-active-border: #F47920;
+}
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  background-color: var(--color-gray-bg);
+  color: var(--color-black);
+}
+
+.font-display {
+  font-family: 'Playfair Display', serif;
+}
+
+.font-body {
+  font-family: 'Source Sans 3', sans-serif;
+}
