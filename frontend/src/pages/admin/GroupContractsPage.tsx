@@ -114,7 +114,7 @@ function ContractCard({
     contract.internal_notes ?? ''
   )
   const [noteInput, setNoteInput] = useState('')
-  const [statusSelect, setStatusSelect] = useState(contract.status)
+  const [statusSelect, setStatusSelect] = useState<string>(contract.status)
 
   useEffect(() => {
     setInternalNotes(contract.internal_notes ?? '')
