@@ -8,10 +8,12 @@ import DinnerAdminPage from './pages/admin/DinnerAdminPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import HousekeepingPage from './pages/admin/HousekeepingPage'
 import GroupContractsPage from './pages/admin/GroupContractsPage'
+import InventoryPage from './pages/admin/InventoryPage'
 import ChecklistPage from './pages/public/ChecklistPage'
 import DinnerMenuPage from './pages/public/DinnerMenuPage'
 import HousekeepingStaffPage from './pages/public/HousekeepingStaffPage'
 import GroupInquiryPage from './pages/public/GroupInquiryPage'
+import InventoryStockCheckPage from './pages/public/InventoryStockCheckPage'
 
 function ProtectedAdminShell() {
   const { isAuthenticated } = useAuth()
@@ -33,11 +35,13 @@ export default function App() {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="housekeeping" element={<HousekeepingPage />} />
         <Route path="groups" element={<GroupContractsPage />} />
+        <Route path="inventory" element={<InventoryPage />} />
       </Route>
       <Route path="/checklist" element={<ChecklistPage />} />
       <Route path="/dinner" element={<DinnerMenuPage />} />
       <Route path="/housekeeping" element={<HousekeepingStaffPage />} />
       <Route path="/groups" element={<GroupInquiryPage />} />
+      <Route path="/inventory" element={<InventoryStockCheckPage />} />
     </Routes>
   )
 }

@@ -10,6 +10,7 @@ import { useTodayTasks, useTasksRange } from '../../hooks/useTasks'
 import { useTodayOrders } from '../../hooks/useOrders'
 import { useHousekeepingProgress, useHousekeepingTimeline } from '../../hooks/useHousekeeping'
 import { useGroupContracts, useGroupStats } from '../../hooks/useGroups'
+import { useInventoryAlerts } from '../../hooks/useInventory'
 import { getMonthRange, getToday, timeAgo } from '../../lib/utils'
 
 const PACE_LABEL: Record<string, string> = {
@@ -38,6 +39,7 @@ export default function HomePage() {
   const { data: timelineData } = useHousekeepingTimeline(todayDate)
   const { data: groupStats } = useGroupStats()
   const { data: groupContractsData } = useGroupContracts(undefined, true)
+  const { data: invAlerts } = useInventoryAlerts()
 
   const hour = new Date().getHours()
   const completedCount = todayTasks?.completed_count ?? 0
@@ -45,6 +47,14 @@ export default function HomePage() {
   const roomsDone = hkProgress?.total_done ?? 0
   const roomsTotal = hkProgress?.total_assigned ?? 0
   const roomsPending = hkProgress?.total_pending ?? 0
+  const invCritical = invAlerts?.critical_count ?? 0
+  const invLow = invAlerts?.low_count ?? 0
+  const invAlertTotal = invCritical + invLow
+  const topCriticalItems = Object.values(invAlerts?.by_vendor ?? {})
+    .flat()
+    .filter((i) => i.status === 'critical')
+    .slice(0, 3)
+
   const cutoffAlerts = groupStats?.cutoff_alerts ?? 0
   const totalActiveGroups = groupStats?.total_active ?? 0
   const upcomingContracts = (groupContractsData?.contracts ?? [])
@@ -64,6 +74,9 @@ export default function HomePage() {
     }
     if (cutoffAlerts > 0) {
       list.push({ type: 'warning', title: 'Group cutoff alert', message: `${cutoffAlerts} group contract(s) have a cutoff date within 3 days.`, icon: '🚨' })
+    }
+    if (invCritical > 0) {
+      list.push({ type: 'warning', title: 'Inventory critically low', message: `${invCritical} item(s) need to be ordered — check Order List.`, icon: '⚠️' })
     }
     const hkClear = roomsTotal === 0 || roomsPending === 0
     if (completedCount === 6 && pendingOrders === 0 && hkClear && cutoffAlerts === 0) {
@@ -195,6 +208,37 @@ export default function HomePage() {
           )}
         </SectionCard>
       </div>
+
+      {/* Inventory Alerts — only shown when items need reordering */}
+      {invAlertTotal > 0 && (
+        <div className="mt-5">
+          <SectionCard>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-base font-semibold">Inventory Alerts</h2>
+              <Link to="/admin/inventory" className="text-xs text-orange hover:underline font-semibold">
+                View Inventory →
+              </Link>
+            </div>
+            {invCritical > 0 && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">🔴</span>
+                <p className="text-sm font-semibold text-red">{invCritical} item{invCritical > 1 ? 's' : ''} critically low — order now</p>
+              </div>
+            )}
+            {invLow > 0 && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">🟡</span>
+                <p className="text-sm font-semibold text-yellow-hotel">{invLow} item{invLow > 1 ? 's' : ''} running low</p>
+              </div>
+            )}
+            {topCriticalItems.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <p className="text-xs text-gray-400">{topCriticalItems.map((i) => i.name).join(' · ')}</p>
+              </div>
+            )}
+          </SectionCard>
+        </div>
+      )}
 
       {/* Group Bookings — only shown when there are active contracts */}
       {totalActiveGroups > 0 && (

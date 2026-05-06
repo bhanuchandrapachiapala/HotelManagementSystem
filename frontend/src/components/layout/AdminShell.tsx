@@ -10,6 +10,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/reports':       'Reports',
   '/admin/housekeeping':  'Housekeeping',
   '/admin/groups':        'Group Contracts',
+  '/admin/inventory':     'Inventory',
 }
 
 export default function AdminShell() {

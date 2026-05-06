@@ -8,6 +8,7 @@ from config import settings
 from routers import tasks, orders
 from routers.housekeeping import router as housekeeping_router
 from routers.group_contracts import router as groups_router
+from routers.inventory import router as inventory_router
 
 app = FastAPI(title="CascoBay HMS API")
 
@@ -29,6 +30,7 @@ app.include_router(tasks.router, prefix="/api/tasks")
 app.include_router(orders.router, prefix="/api/orders")
 app.include_router(housekeeping_router, prefix="/api/housekeeping")
 app.include_router(groups_router, prefix="/api/groups")
+app.include_router(inventory_router, prefix="/api/inventory")
 
 
 @app.get("/")

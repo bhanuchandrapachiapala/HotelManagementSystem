@@ -308,3 +308,55 @@ export interface UpdateGroupContractRequest {
   room_count?: number
   room_type?: string
 }
+
+export interface InventoryItem {
+  id: number
+  name: string
+  category: string
+  vendor: string
+  unit: string
+  min_quantity: number
+  current_quantity: number
+  suggested_order: number
+  notes?: string
+  is_active: boolean
+  last_checked_at?: string
+  last_checked_by?: string
+  status?: 'critical' | 'low' | 'ok'
+  created_at: string
+  updated_at: string
+}
+
+export interface InventoryLog {
+  id: number
+  item_id: number
+  item_name?: string
+  category?: string
+  previous_qty: number
+  new_qty: number
+  change_type: string
+  updated_by?: string
+  notes?: string
+  created_at: string
+}
+
+export interface InventoryAlerts {
+  critical_count: number
+  low_count: number
+  by_vendor: Record<string, InventoryItem[]>
+}
+
+export interface InventorySummary {
+  total: number
+  critical: number
+  low: number
+  ok: number
+}
+
+export interface BulkUpdateEntry {
+  item_id: number
+  current_quantity: number
+  updated_by: string
+  change_type?: string
+  notes?: string
+}

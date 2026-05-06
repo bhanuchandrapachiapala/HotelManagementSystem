@@ -21,6 +21,11 @@ import type {
   GroupStats,
   CreateGroupContractRequest,
   UpdateGroupContractRequest,
+  InventoryItem,
+  InventoryLog,
+  InventoryAlerts,
+  InventorySummary,
+  BulkUpdateEntry,
 } from '../types'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:8000'
@@ -198,4 +203,85 @@ export function addGroupNote(
 
 export function getGroupStats(): Promise<GroupStats> {
   return apiFetch('/api/groups/stats')
+}
+
+// Inventory
+export function getInventoryItems(
+  category?: string,
+  vendor?: string,
+  status?: string,
+): Promise<{ items: InventoryItem[]; summary: InventorySummary }> {
+  const params = new URLSearchParams()
+  if (category) params.set('category', category)
+  if (vendor) params.set('vendor', vendor)
+  if (status) params.set('status', status)
+  const qs = params.toString() ? `?${params.toString()}` : ''
+  return apiFetch(`/api/inventory/items${qs}`)
+}
+
+export function getInventoryAlerts(): Promise<InventoryAlerts> {
+  return apiFetch('/api/inventory/alerts')
+}
+
+export function getInventoryHistory(): Promise<{ logs: InventoryLog[] }> {
+  return apiFetch('/api/inventory/history')
+}
+
+export function updateItemQuantity(
+  itemId: number,
+  data: { current_quantity: number; updated_by: string; change_type?: string; notes?: string },
+): Promise<{ message: string; item: InventoryItem }> {
+  return apiFetch(`/api/inventory/items/${itemId}/quantity`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export function bulkUpdateInventory(
+  updates: BulkUpdateEntry[],
+  updatedBy: string,
+): Promise<{ message: string; updated_count: number }> {
+  return apiFetch('/api/inventory/items/bulk-update', {
+    method: 'POST',
+    body: JSON.stringify({ updates, updated_by: updatedBy }),
+  })
+}
+
+export function markItemsOrdered(
+  itemIds: number[],
+  updatedBy: string,
+): Promise<{ message: string }> {
+  return apiFetch('/api/inventory/items/mark-ordered', {
+    method: 'POST',
+    body: JSON.stringify({ item_ids: itemIds, updated_by: updatedBy }),
+  })
+}
+
+export function addInventoryItem(data: {
+  name: string
+  category: string
+  vendor?: string
+  unit?: string
+  min_quantity?: number
+  current_quantity?: number
+  notes?: string
+}): Promise<{ message: string; item: InventoryItem }> {
+  return apiFetch('/api/inventory/items', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export function updateInventoryItem(
+  itemId: number,
+  data: {
+    name?: string
+    min_quantity?: number
+    vendor?: string
+    unit?: string
+    notes?: string
+    is_active?: boolean
+  },
+): Promise<{ message: string; item: InventoryItem }> {
+  return apiFetch(`/api/inventory/items/${itemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
 }
