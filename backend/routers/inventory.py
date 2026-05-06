@@ -58,6 +58,7 @@ def get_alerts():
             'min_quantity': item['min_quantity'],
             'suggested_order': item['suggested_order'],
             'unit': item['unit'],
+            'icon': item.get('icon', '📦'),
         })
 
     return {
