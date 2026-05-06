@@ -7,6 +7,7 @@ import uvicorn
 from config import settings
 from routers import tasks, orders
 from routers.housekeeping import router as housekeeping_router
+from routers.group_contracts import router as groups_router
 
 app = FastAPI(title="CascoBay HMS API")
 
@@ -27,6 +28,7 @@ async def unhandled_exception_handler(_request: Request, exc: Exception) -> JSON
 app.include_router(tasks.router, prefix="/api/tasks")
 app.include_router(orders.router, prefix="/api/orders")
 app.include_router(housekeeping_router, prefix="/api/housekeeping")
+app.include_router(groups_router, prefix="/api/groups")
 
 
 @app.get("/")

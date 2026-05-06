@@ -1,10 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, BarChart2, Link, LogOut, BedDouble } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, BarChart2, Link, LogOut, BedDouble, Users } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../hooks/useAuth'
 import { useTodayTasks } from '../../hooks/useTasks'
 import { useTodayOrders } from '../../hooks/useOrders'
 import { useHousekeepingProgress } from '../../hooks/useHousekeeping'
+import { useGroupStats } from '../../hooks/useGroups'
 import { getToday, cn } from '../../lib/utils'
 
 interface SidebarProps {
@@ -17,9 +18,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const { data: todayTasks } = useTodayTasks()
   const { data: todayOrders } = useTodayOrders()
   const { data: hkProgress } = useHousekeepingProgress(getToday())
+  const { data: groupStats } = useGroupStats()
 
   const pendingOrders = todayOrders?.pending ?? 0
   const pendingRooms = hkProgress?.total_pending ?? 0
+  const cutoffAlerts = groupStats?.cutoff_alerts ?? 0
   const tasksIncomplete =
     new Date().getHours() >= 17 && (todayTasks?.completed_count ?? 6) < 6
 
@@ -102,6 +105,20 @@ export default function Sidebar({ onClose }: SidebarProps) {
           )}
         </NavLink>
 
+        <NavLink
+          to="/admin/groups"
+          onClick={onClose}
+          className={({ isActive }) => cn(base, isActive ? active : inactive)}
+        >
+          <Users size={16} />
+          Group Contracts
+          {cutoffAlerts > 0 && (
+            <span className="ml-auto text-[10px] font-bold bg-red text-white px-1.5 py-0.5 rounded-full">
+              {cutoffAlerts}
+            </span>
+          )}
+        </NavLink>
+
         <p className="px-5 text-[10px] uppercase tracking-widest text-white/30 font-semibold mt-5 mb-2">Insights</p>
 
         <NavLink
@@ -137,6 +154,14 @@ export default function Sidebar({ onClose }: SidebarProps) {
         >
           <Link size={16} />
           Copy Housekeeping Link
+        </button>
+
+        <button
+          onClick={() => copyLink('/groups')}
+          className={cn(base, inactive, 'w-full text-left')}
+        >
+          <Link size={16} />
+          Copy Group Inquiry Link
         </button>
       </nav>
 

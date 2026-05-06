@@ -228,3 +228,83 @@ export interface TransferRoomsRequest {
   to_housekeeper_id: number
   room_numbers: string[]
 }
+
+// ── Group Contracts ───────────────────────────────────────────────────────────
+
+export interface GroupContract {
+  id: number
+  group_name: string
+  contact_name: string
+  contact_phone: string
+  company_address?: string
+  check_in_date: string
+  check_out_date: string
+  room_count: number
+  room_type: string
+  room_rate?: number
+  triple_rate?: number
+  quad_rate?: number
+  deposit_by_date?: string
+  cutoff_date?: string
+  signed_by_date?: string
+  status: 'inquiry' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled'
+  deposit_paid: boolean
+  special_notes?: string
+  internal_notes?: string
+  source: string
+  days_until_checkin?: number
+  cutoff_alert?: boolean
+  activity_log?: GroupActivityLog[]
+  created_at: string
+  updated_at: string
+}
+
+export interface GroupActivityLog {
+  id: number
+  contract_id: number
+  note: string
+  created_at: string
+}
+
+export interface GroupStats {
+  total_active: number
+  total_completed: number
+  total_cancelled: number
+  upcoming_this_week: number
+  cutoff_alerts: number
+  by_status: Record<string, number>
+  by_month: Array<{ month: string; count: number }>
+}
+
+export interface CreateGroupContractRequest {
+  group_name: string
+  contact_name: string
+  contact_phone: string
+  company_address?: string
+  check_in_date: string
+  check_out_date: string
+  room_count: number
+  room_type: string
+  room_rate?: number
+  triple_rate?: number
+  quad_rate?: number
+  deposit_by_date?: string
+  cutoff_date?: string
+  special_notes?: string
+  source: string
+}
+
+export interface UpdateGroupContractRequest {
+  status?: string
+  deposit_paid?: boolean
+  room_rate?: number
+  triple_rate?: number
+  quad_rate?: number
+  deposit_by_date?: string
+  cutoff_date?: string
+  signed_by_date?: string
+  internal_notes?: string
+  special_notes?: string
+  room_count?: number
+  room_type?: string
+}

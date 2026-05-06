@@ -1,4 +1,5 @@
 import { format as fnsFormat } from 'date-fns'
+import { Link } from 'react-router-dom'
 import PageWrapper from '../../components/layout/PageWrapper'
 import StatCard from '../../components/ui/StatCard'
 import SectionCard from '../../components/ui/SectionCard'
@@ -8,6 +9,7 @@ import ProgressBar from '../../components/ui/ProgressBar'
 import { useTodayTasks, useTasksRange } from '../../hooks/useTasks'
 import { useTodayOrders } from '../../hooks/useOrders'
 import { useHousekeepingProgress, useHousekeepingTimeline } from '../../hooks/useHousekeeping'
+import { useGroupContracts, useGroupStats } from '../../hooks/useGroups'
 import { getMonthRange, getToday, timeAgo } from '../../lib/utils'
 
 const PACE_LABEL: Record<string, string> = {
@@ -34,6 +36,8 @@ export default function HomePage() {
   const { data: monthRange, isLoading: loadingRange } = useTasksRange(start, end)
   const { data: hkProgress, isLoading: loadingHK } = useHousekeepingProgress(todayDate)
   const { data: timelineData } = useHousekeepingTimeline(todayDate)
+  const { data: groupStats } = useGroupStats()
+  const { data: groupContractsData } = useGroupContracts(undefined, true)
 
   const hour = new Date().getHours()
   const completedCount = todayTasks?.completed_count ?? 0
@@ -41,6 +45,11 @@ export default function HomePage() {
   const roomsDone = hkProgress?.total_done ?? 0
   const roomsTotal = hkProgress?.total_assigned ?? 0
   const roomsPending = hkProgress?.total_pending ?? 0
+  const cutoffAlerts = groupStats?.cutoff_alerts ?? 0
+  const totalActiveGroups = groupStats?.total_active ?? 0
+  const upcomingContracts = (groupContractsData?.contracts ?? [])
+    .filter((c) => ['inquiry', 'confirmed', 'checked_in'].includes(c.status))
+    .slice(0, 3)
 
   const alerts = (() => {
     const list: Array<{ type: 'warning' | 'error' | 'success' | 'info'; title: string; message: string; icon: string }> = []
@@ -53,8 +62,11 @@ export default function HomePage() {
     if (roomsPending > 0) {
       list.push({ type: 'warning', title: 'Rooms pending', message: `${roomsPending} room(s) not yet cleaned today.`, icon: '🛏️' })
     }
+    if (cutoffAlerts > 0) {
+      list.push({ type: 'warning', title: 'Group cutoff alert', message: `${cutoffAlerts} group contract(s) have a cutoff date within 3 days.`, icon: '🚨' })
+    }
     const hkClear = roomsTotal === 0 || roomsPending === 0
-    if (completedCount === 6 && pendingOrders === 0 && hkClear) {
+    if (completedCount === 6 && pendingOrders === 0 && hkClear && cutoffAlerts === 0) {
       list.push({ type: 'success', title: 'All clear', message: 'All tasks done, no pending orders, rooms on track.', icon: '✅' })
     }
     if (!todayTasks && !todayOrders) {
@@ -183,6 +195,76 @@ export default function HomePage() {
           )}
         </SectionCard>
       </div>
+
+      {/* Group Bookings — only shown when there are active contracts */}
+      {totalActiveGroups > 0 && (
+        <div className="mt-5">
+          <SectionCard>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-base font-semibold">Group Bookings</h2>
+              <Link to="/admin/groups" className="text-xs text-orange hover:underline font-semibold">
+                View all →
+              </Link>
+            </div>
+
+            {cutoffAlerts > 0 && (
+              <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-red/10 border border-red/20">
+                <span>🚨</span>
+                <p className="text-xs font-semibold text-red">
+                  {cutoffAlerts} contract{cutoffAlerts > 1 ? 's' : ''} have a cutoff date within 3 days — action required
+                </p>
+              </div>
+            )}
+
+            {upcomingContracts.length === 0 ? (
+              <p className="text-gray-400 text-sm">No upcoming group check-ins.</p>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {upcomingContracts.map((c) => {
+                  const statusColors: Record<string, string> = {
+                    inquiry: 'bg-orange/10 text-orange',
+                    confirmed: 'bg-green-light text-green',
+                    checked_in: 'bg-blue-50 text-blue-600',
+                  }
+                  const statusLabels: Record<string, string> = {
+                    inquiry: 'Inquiry',
+                    confirmed: 'Confirmed',
+                    checked_in: 'Checked In',
+                  }
+                  const daysLabel =
+                    c.days_until_checkin === 0
+                      ? 'Today'
+                      : c.days_until_checkin === 1
+                      ? 'Tomorrow'
+                      : c.days_until_checkin !== undefined && c.days_until_checkin < 0
+                      ? 'Checked in'
+                      : `In ${c.days_until_checkin} days`
+
+                  return (
+                    <div key={c.id} className="py-2.5 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-brand-black truncate">{c.group_name}</p>
+                        <p className="text-xs text-gray-400">{c.check_in_date} · {c.room_count} rooms · {daysLabel}</p>
+                        {c.cutoff_alert && (
+                          <p className="text-[10px] font-bold text-red mt-0.5">Cutoff approaching</p>
+                        )}
+                      </div>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${statusColors[c.status] ?? 'bg-gray-100 text-gray-400'}`}>
+                        {statusLabels[c.status] ?? c.status}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <div className="mt-3 pt-3 border-t border-gray-100 flex gap-4 text-xs text-gray-400">
+              <span><span className="font-semibold text-brand-black">{groupStats?.total_active ?? 0}</span> active</span>
+              <span><span className="font-semibold text-brand-black">{groupStats?.upcoming_this_week ?? 0}</span> arriving this week</span>
+            </div>
+          </SectionCard>
+        </div>
+      )}
     </PageWrapper>
   )
 }

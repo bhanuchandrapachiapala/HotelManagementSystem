@@ -16,6 +16,11 @@ import type {
   HousekeepingTimelineEntry,
   AssignRoomsRequest,
   TransferRoomsRequest,
+  GroupContract,
+  GroupActivityLog,
+  GroupStats,
+  CreateGroupContractRequest,
+  UpdateGroupContractRequest,
 } from '../types'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:8000'
@@ -150,4 +155,47 @@ export function getHousekeepingTimeline(
   date: string,
 ): Promise<{ timeline: HousekeepingTimelineEntry[] }> {
   return apiFetch(`/api/housekeeping/timeline?date=${date}`)
+}
+
+// Group Contracts
+export function getGroupContracts(
+  status?: string,
+  upcomingOnly?: boolean,
+): Promise<{ contracts: GroupContract[] }> {
+  const params = new URLSearchParams()
+  if (status) params.set('status', status)
+  if (upcomingOnly) params.set('upcoming_only', 'true')
+  const qs = params.toString() ? `?${params.toString()}` : ''
+  return apiFetch(`/api/groups${qs}`)
+}
+
+export function getGroupContract(id: number): Promise<{ contract: GroupContract }> {
+  return apiFetch(`/api/groups/${id}`)
+}
+
+export function createGroupContract(
+  data: CreateGroupContractRequest,
+): Promise<{ message: string; contract: GroupContract }> {
+  return apiFetch('/api/groups', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export function updateGroupContract(
+  id: number,
+  data: UpdateGroupContractRequest,
+): Promise<{ message: string; contract: GroupContract }> {
+  return apiFetch(`/api/groups/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+
+export function addGroupNote(
+  id: number,
+  note: string,
+): Promise<{ message: string; log: GroupActivityLog }> {
+  return apiFetch(`/api/groups/${id}/notes`, {
+    method: 'POST',
+    body: JSON.stringify({ note }),
+  })
+}
+
+export function getGroupStats(): Promise<GroupStats> {
+  return apiFetch('/api/groups/stats')
 }
