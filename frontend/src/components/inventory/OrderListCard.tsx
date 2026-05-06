@@ -7,6 +7,14 @@ const CATEGORY_BG: Record<string, string> = {
   cleaning_supplies: 'bg-green-100',
   front_desk: 'bg-gray-100',
 }
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  breakfast_food: '🍳',
+  disposables: '🥤',
+  room_amenities: '🛁',
+  cleaning_supplies: '🧹',
+  front_desk: '📋',
+}
 import type { InventoryItem } from '../../types'
 
 const VENDOR_LABELS: Record<string, string> = {
@@ -93,7 +101,7 @@ export default function OrderListCard({
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0', CATEGORY_BG[item.category] ?? 'bg-gray-100')}>
-                    {item.icon ?? '📦'}
+                    {item.icon || CATEGORY_EMOJI[item.category] || '📦'}
                   </span>
                   <span className="text-sm font-semibold text-brand-black">
                     {item.name}

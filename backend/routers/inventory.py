@@ -18,12 +18,19 @@ from models.inventory import (
 router = APIRouter()
 
 
+_debug_printed = False
+
 def _enrich(row: dict) -> dict:
+    global _debug_printed
     row['status'] = compute_status(
         float(row.get('current_quantity', 0)),
         float(row.get('min_quantity', 1)),
     )
-    row['icon'] = ITEM_EMOJIS.get(row.get('name', ''), '📦')
+    name = row.get('name', '')
+    row['icon'] = ITEM_EMOJIS.get(name, '📦')
+    if not _debug_printed:
+        print(f'[inventory] _enrich debug — name={name!r}, icon={row["icon"]!r}, dict_size={len(ITEM_EMOJIS)}')
+        _debug_printed = True
     return row
 
 

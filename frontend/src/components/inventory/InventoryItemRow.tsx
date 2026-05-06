@@ -40,6 +40,14 @@ const CATEGORY_BG: Record<string, string> = {
   front_desk: 'bg-gray-100',
 }
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  breakfast_food: '🍳',
+  disposables: '🥤',
+  room_amenities: '🛁',
+  cleaning_supplies: '🧹',
+  front_desk: '📋',
+}
+
 function computeStatus(item: InventoryItem): 'critical' | 'low' | 'ok' {
   if (item.current_quantity <= item.min_quantity) return 'critical'
   if (item.current_quantity <= item.min_quantity * 1.2) return 'low'
@@ -191,7 +199,7 @@ export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) 
       <div className="flex items-center gap-2.5 min-w-[200px] flex-1">
         <span className={cn('w-2 h-2 rounded-full flex-shrink-0', dotClass)} />
         <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0', CATEGORY_BG[item.category] ?? 'bg-gray-100')}>
-          {item.icon ?? '📦'}
+          {item.icon || CATEGORY_EMOJI[item.category] || '📦'}
         </span>
         <span className="font-semibold text-brand-black text-sm">{item.name}</span>
         <span

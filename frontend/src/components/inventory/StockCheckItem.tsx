@@ -18,6 +18,14 @@ const CATEGORY_BG: Record<string, string> = {
   front_desk: 'bg-gray-100',
 }
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  breakfast_food: '🍳',
+  disposables: '🥤',
+  room_amenities: '🛁',
+  cleaning_supplies: '🧹',
+  front_desk: '📋',
+}
+
 const VENDOR_LABELS: Record<string, string> = {
   sysco: 'Sysco',
   costco: 'Costco',
@@ -98,7 +106,7 @@ export default function StockCheckItem({ item, value, onChange }: Props) {
     <div className="pb-4 border-b border-gray-100 last:border-0">
       <div className="flex flex-wrap items-center gap-2 mb-1">
         <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0', CATEGORY_BG[item.category] ?? 'bg-gray-100')}>
-          {item.icon ?? '📦'}
+          {item.icon || CATEGORY_EMOJI[item.category] || '📦'}
         </span>
         <h3 className="text-lg font-bold text-brand-black">{item.name}</h3>
         <span
