@@ -463,6 +463,17 @@ function StockStatusTab() {
   )
 }
 
+// Vendor display order for Order List
+const VENDOR_ORDER = ['sysco', 'costco', 'webstaurantstore', 'members_mark', 'other']
+
+const CATEGORY_EMOJI_PRINT: Record<string, string> = {
+  breakfast_food: '🍳',
+  disposables: '🥤',
+  room_amenities: '🛁',
+  cleaning_supplies: '🧹',
+  front_desk: '📋',
+}
+
 // ─── Order List Tab ───────────────────────────────────────────────────────────
 
 function OrderListTab() {
@@ -471,7 +482,8 @@ function OrderListTab() {
   const markOrdered = useMarkOrdered()
 
   const byVendor: Record<string, InventoryItem[]> = alertsData?.by_vendor ?? {}
-  const vendorKeys = Object.keys(byVendor).filter((v) => byVendor[v].length > 0)
+  // Ordered: Sysco → Costco → WebstaurantStore → Member's Mark → Other
+  const vendorKeys = VENDOR_ORDER.filter((v) => (byVendor[v]?.length ?? 0) > 0)
 
   function toggleId(id: number) {
     setSelectedIds((prev) => {
@@ -508,6 +520,67 @@ function OrderListTab() {
     }
   }
 
+  function handlePrint() {
+    const today = new Date().toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })
+
+    let body = ''
+    VENDOR_ORDER.forEach((vendor) => {
+      const items = byVendor[vendor]
+      if (!items || items.length === 0) return
+      const vendorLabel = VENDOR_LABELS[vendor] ?? vendor
+      body += `<div class="vendor-section">
+  <div class="vendor-header">${vendorLabel} — ${items.length} item${items.length !== 1 ? 's' : ''}</div>`
+      items.forEach((item) => {
+        const emoji =
+          item.icon && item.icon !== '📦'
+            ? item.icon
+            : (CATEGORY_EMOJI_PRINT[item.category] ?? '')
+        body += `
+  <div class="item-row">
+    <span class="item-name">${emoji} ${item.name}</span>
+    <span class="item-info">Current: ${item.current_quantity} ${item.unit} &nbsp;|&nbsp; Min: ${item.min_quantity} &nbsp;|&nbsp; Order: ${item.suggested_order} ${item.unit}</span>
+  </div>`
+      })
+      body += `\n</div>`
+    })
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Order List — Casco Bay Hotel</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #000; background: #fff; padding: 32px; }
+    h1 { font-size: 22px; font-weight: bold; margin: 0 0 4px; }
+    .subtitle { font-size: 14px; color: #555; margin-bottom: 28px; border-bottom: 2px solid #000; padding-bottom: 12px; }
+    .vendor-section { margin-bottom: 28px; page-break-inside: avoid; }
+    .vendor-header { font-size: 15px; font-weight: bold; text-decoration: underline; margin-bottom: 10px; padding-bottom: 4px; }
+    .item-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid #e5e5e5; gap: 16px; }
+    .item-name { font-weight: 500; flex: 1; }
+    .item-info { color: #555; font-size: 12px; white-space: nowrap; }
+    @media print { body { padding: 16px; } button { display: none !important; } }
+  </style>
+</head>
+<body>
+  <h1>Casco Bay Hotel</h1>
+  <div class="subtitle">Order List — ${today}</div>
+  ${body}
+</body>
+</html>`
+
+    const win = window.open('', '_blank', 'width=800,height=700')
+    if (win) {
+      win.document.write(html)
+      win.document.close()
+      win.focus()
+      win.print()
+    }
+  }
+
   const allAlertItems = vendorKeys.flatMap((v) => byVendor[v])
 
   return (
@@ -518,8 +591,9 @@ function OrderListTab() {
         </h2>
         <div className="flex gap-2">
           <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold rounded-[10px] px-4 py-2 text-sm transition-colors"
+            onClick={handlePrint}
+            disabled={vendorKeys.length === 0}
+            className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold rounded-[10px] px-4 py-2 text-sm transition-colors disabled:opacity-40"
           >
             <Printer size={14} />
             Print

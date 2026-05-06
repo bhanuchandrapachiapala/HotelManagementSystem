@@ -199,7 +199,7 @@ export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) 
       <div className="flex items-center gap-2.5 min-w-[200px] flex-1">
         <span className={cn('w-2 h-2 rounded-full flex-shrink-0', dotClass)} />
         <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0', CATEGORY_BG[item.category] ?? 'bg-gray-100')}>
-          {item.icon || CATEGORY_EMOJI[item.category] || '📦'}
+          {item.icon && item.icon !== '📦' ? item.icon : (CATEGORY_EMOJI[item.category] ?? '📦')}
         </span>
         <span className="font-semibold text-brand-black text-sm">{item.name}</span>
         <span

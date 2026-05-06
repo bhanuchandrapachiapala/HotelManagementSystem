@@ -1,4 +1,29 @@
 import { cn } from '../../lib/utils'
+import type { InventoryItem } from '../../types'
+
+const VENDOR_LABELS: Record<string, string> = {
+  sysco: 'Sysco',
+  costco: 'Costco',
+  webstaurantstore: 'WebstaurantStore',
+  members_mark: "Member's Mark",
+  other: 'Other',
+}
+
+const VENDOR_PILL: Record<string, string> = {
+  sysco: 'bg-blue-100 text-blue-700',
+  costco: 'bg-red/10 text-red',
+  webstaurantstore: 'bg-purple-100 text-purple-700',
+  members_mark: 'bg-green-light text-green',
+  other: 'bg-gray-100 text-gray-600',
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  breakfast_food: 'Breakfast & Food',
+  disposables: 'Disposables & Supplies',
+  room_amenities: 'Room Amenities',
+  cleaning_supplies: 'Cleaning Supplies',
+  front_desk: 'Front Desk & Office',
+}
 
 const CATEGORY_BG: Record<string, string> = {
   breakfast_food: 'bg-orange-100',
@@ -15,28 +40,17 @@ const CATEGORY_EMOJI: Record<string, string> = {
   cleaning_supplies: '🧹',
   front_desk: '📋',
 }
-import type { InventoryItem } from '../../types'
-
-const VENDOR_LABELS: Record<string, string> = {
-  sysco: 'Sysco',
-  costco: 'Costco',
-  webstaurantstore: 'WebstaurantStore',
-  members_mark: "Member's Mark",
-  other: 'Other',
-}
-
-const CATEGORY_LABELS: Record<string, string> = {
-  breakfast_food: 'Breakfast & Food',
-  disposables: 'Disposables & Supplies',
-  room_amenities: 'Room Amenities',
-  cleaning_supplies: 'Cleaning Supplies',
-  front_desk: 'Front Desk & Office',
-}
 
 function computeStatus(item: InventoryItem): 'critical' | 'low' | 'ok' {
   if (item.current_quantity <= item.min_quantity) return 'critical'
   if (item.current_quantity <= item.min_quantity * 1.2) return 'low'
   return 'ok'
+}
+
+function itemEmoji(item: InventoryItem): string {
+  return item.icon && item.icon !== '📦'
+    ? item.icon
+    : CATEGORY_EMOJI[item.category] ?? '📦'
 }
 
 interface Props {
@@ -55,15 +69,16 @@ export default function OrderListCard({
   onMarkVendorOrdered,
 }: Props) {
   const vendorLabel = VENDOR_LABELS[vendor] ?? vendor
+  const pillClass = VENDOR_PILL[vendor] ?? 'bg-gray-100 text-gray-600'
 
   return (
     <div className="bg-white rounded-card shadow-sm border border-gray-100 overflow-hidden">
       {/* Vendor header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/60">
         <div className="flex items-center gap-3">
-          <h3 className="font-display text-base font-bold text-brand-black">
+          <span className={cn('text-sm font-bold px-3 py-1 rounded-full', pillClass)}>
             {vendorLabel}
-          </h3>
+          </span>
           <span className="text-sm text-gray-500 font-medium">
             {items.length} item{items.length !== 1 ? 's' : ''} to order
           </span>
@@ -82,6 +97,7 @@ export default function OrderListCard({
           const status = computeStatus(item)
           const isSelected = selectedIds.has(item.id)
           const categoryLabel = CATEGORY_LABELS[item.category] ?? item.category
+          const emoji = itemEmoji(item)
 
           return (
             <div
@@ -100,19 +116,22 @@ export default function OrderListCard({
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0', CATEGORY_BG[item.category] ?? 'bg-gray-100')}>
-                    {item.icon || CATEGORY_EMOJI[item.category] || '📦'}
+                  <span
+                    className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0',
+                      CATEGORY_BG[item.category] ?? 'bg-gray-100'
+                    )}
+                  >
+                    {emoji}
                   </span>
-                  <span className="text-sm font-semibold text-brand-black">
-                    {item.name}
-                  </span>
+                  <span className="text-sm font-semibold text-brand-black">{item.name}</span>
                   <span className="text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
                     {categoryLabel}
                   </span>
                 </div>
                 <p className="text-xs text-gray-500">
-                  Current: {item.current_quantity} {item.unit} &nbsp;|&nbsp; Min:{' '}
-                  {item.min_quantity} &nbsp;|&nbsp; Suggested order: {item.suggested_order}{' '}
+                  Current: {item.current_quantity} {item.unit}&nbsp;&nbsp;|&nbsp;&nbsp;Min:{' '}
+                  {item.min_quantity}&nbsp;&nbsp;|&nbsp;&nbsp;Suggested order: {item.suggested_order}{' '}
                   {item.unit}
                 </p>
               </div>

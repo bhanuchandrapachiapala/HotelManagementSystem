@@ -106,7 +106,7 @@ export default function StockCheckItem({ item, value, onChange }: Props) {
     <div className="pb-4 border-b border-gray-100 last:border-0">
       <div className="flex flex-wrap items-center gap-2 mb-1">
         <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0', CATEGORY_BG[item.category] ?? 'bg-gray-100')}>
-          {item.icon || CATEGORY_EMOJI[item.category] || '📦'}
+          {item.icon && item.icon !== '📦' ? item.icon : (CATEGORY_EMOJI[item.category] ?? '📦')}
         </span>
         <h3 className="text-lg font-bold text-brand-black">{item.name}</h3>
         <span
