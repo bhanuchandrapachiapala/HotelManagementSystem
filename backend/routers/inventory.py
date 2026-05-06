@@ -53,6 +53,7 @@ def get_alerts():
         by_vendor[vendor].append({
             'id': item['id'],
             'name': item['name'],
+            'category': item.get('category', ''),
             'status': item['status'],
             'current_quantity': item['current_quantity'],
             'min_quantity': item['min_quantity'],
@@ -61,6 +62,7 @@ def get_alerts():
             'icon': item.get('icon', '📦'),
         })
 
+    print(f"[alerts debug] first item: {list(by_vendor.values())[0][0] if any(by_vendor.values()) else 'empty'}")
     return {
         'critical_count': len(critical),
         'low_count': len(low),
