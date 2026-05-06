@@ -70,6 +70,8 @@ interface Props {
   isUpdating: boolean
 }
 
+const KNOWN_VENDOR_KEYS = Object.keys(VENDOR_LABELS)
+
 export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) {
   const [editing, setEditing] = useState(false)
   const [confirmDeactivate, setConfirmDeactivate] = useState(false)
@@ -80,6 +82,7 @@ export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) 
     unit: item.unit,
     notes: item.notes ?? '',
   })
+  const [vendorCustom, setVendorCustom] = useState(!KNOWN_VENDOR_KEYS.includes(item.vendor))
 
   const status = computeStatus(item)
   const dotClass = STATUS_DOT[status]
@@ -147,17 +150,43 @@ export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) 
             <label className="block text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1">
               Vendor
             </label>
-            <select
-              value={form.vendor}
-              onChange={(e) => setForm((f) => ({ ...f, vendor: e.target.value }))}
-              className="w-full border border-gray-200 focus:border-orange rounded-[10px] px-3 py-2 text-sm outline-none bg-white"
-            >
-              <option value="sysco">Sysco</option>
-              <option value="costco">Costco</option>
-              <option value="webstaurantstore">WebstaurantStore</option>
-              <option value="members_mark">Member's Mark</option>
-              <option value="other">Other</option>
-            </select>
+            {vendorCustom ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={form.vendor}
+                  onChange={(e) => setForm((f) => ({ ...f, vendor: e.target.value }))}
+                  placeholder="Enter vendor name"
+                  autoFocus
+                  className="w-full border border-gray-200 focus:border-orange focus:ring-1 focus:ring-orange/20 rounded-[10px] px-3 py-2 text-sm outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setVendorCustom(false); setForm((f) => ({ ...f, vendor: 'sysco' })) }}
+                  className="text-xs text-orange hover:underline whitespace-nowrap flex-shrink-0"
+                >
+                  ← back to list
+                </button>
+              </div>
+            ) : (
+              <select
+                value={form.vendor}
+                onChange={(e) => {
+                  if (e.target.value === '__custom__') {
+                    setVendorCustom(true)
+                    setForm((f) => ({ ...f, vendor: '' }))
+                  } else {
+                    setForm((f) => ({ ...f, vendor: e.target.value }))
+                  }
+                }}
+                className="w-full border border-gray-200 focus:border-orange rounded-[10px] px-3 py-2 text-sm outline-none bg-white"
+              >
+                {Object.entries(VENDOR_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+                <option value="__custom__">＋ Other / Custom vendor...</option>
+              </select>
+            )}
           </div>
           <div className="sm:col-span-2">
             <label className="block text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1">
@@ -182,7 +211,7 @@ export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) 
             Save
           </button>
           <button
-            onClick={() => setEditing(false)}
+            onClick={() => { setEditing(false); setVendorCustom(!KNOWN_VENDOR_KEYS.includes(item.vendor)) }}
             className="flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X size={14} />

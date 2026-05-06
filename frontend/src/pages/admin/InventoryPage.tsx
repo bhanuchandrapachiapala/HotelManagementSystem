@@ -103,6 +103,7 @@ function StockStatusTab() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [showAddForm, setShowAddForm] = useState(false)
   const [addForm, setAddForm] = useState(EMPTY_ADD_FORM)
+  const [addVendorCustom, setAddVendorCustom] = useState(false)
 
   const { data: itemsData, isLoading } = useInventoryItems()
   const addItem = useAddInventoryItem()
@@ -178,6 +179,7 @@ function StockStatusTab() {
       })
       toast.success('Item added')
       setAddForm(EMPTY_ADD_FORM)
+      setAddVendorCustom(false)
       setShowAddForm(false)
     } catch {
       toast.error('Failed to add item')
@@ -296,7 +298,7 @@ function StockStatusTab() {
             <h3 className="font-display text-base font-semibold">Add Inventory Item</h3>
             <button
               type="button"
-              onClick={() => setShowAddForm(false)}
+              onClick={() => { setShowAddForm(false); setAddVendorCustom(false) }}
               className="text-gray-400 hover:text-gray-600 transition-colors"
             >
               <X size={18} />
@@ -336,17 +338,43 @@ function StockStatusTab() {
               <label className="block text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1">
                 Vendor
               </label>
-              <select
-                className={inputCls}
-                value={addForm.vendor}
-                onChange={(e) => setAddField('vendor', e.target.value)}
-              >
-                {Object.entries(VENDOR_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
-              </select>
+              {addVendorCustom ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    className={inputCls}
+                    value={addForm.vendor}
+                    onChange={(e) => setAddField('vendor', e.target.value)}
+                    placeholder="Enter vendor name"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setAddVendorCustom(false); setAddField('vendor', 'sysco') }}
+                    className="text-xs text-orange hover:underline whitespace-nowrap flex-shrink-0"
+                  >
+                    ← back to list
+                  </button>
+                </div>
+              ) : (
+                <select
+                  className={inputCls}
+                  value={addForm.vendor}
+                  onChange={(e) => {
+                    if (e.target.value === '__custom__') {
+                      setAddVendorCustom(true)
+                      setAddField('vendor', '')
+                    } else {
+                      setAddField('vendor', e.target.value)
+                    }
+                  }}
+                >
+                  {Object.entries(VENDOR_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>{v}</option>
+                  ))}
+                  <option value="__custom__">＋ Other / Custom vendor...</option>
+                </select>
+              )}
             </div>
             <div>
               <label className="block text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1">
@@ -410,7 +438,7 @@ function StockStatusTab() {
             </button>
             <button
               type="button"
-              onClick={() => setShowAddForm(false)}
+              onClick={() => { setShowAddForm(false); setAddVendorCustom(false) }}
               className="text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors"
             >
               Cancel

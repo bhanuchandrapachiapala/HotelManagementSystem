@@ -10,7 +10,6 @@ from models.inventory import (
     UpdateItemRequest,
     UpdateQuantityRequest,
     VALID_CATEGORIES,
-    VALID_VENDORS,
     ITEM_EMOJIS,
     compute_status,
 )
@@ -205,8 +204,8 @@ def list_items(
 def create_item(body: CreateItemRequest):
     if body.category not in VALID_CATEGORIES:
         raise HTTPException(status_code=400, detail=f'Invalid category: {body.category}')
-    if body.vendor not in VALID_VENDORS:
-        raise HTTPException(status_code=400, detail=f'Invalid vendor: {body.vendor}')
+    if not body.vendor or not body.vendor.strip():
+        raise HTTPException(status_code=400, detail='Vendor is required')
 
     supabase = get_supabase()
     payload = body.model_dump(exclude_none=True)
@@ -263,8 +262,8 @@ def update_item(item_id: int, body: UpdateItemRequest):
     if not updates:
         raise HTTPException(status_code=400, detail='No fields to update')
 
-    if 'vendor' in updates and updates['vendor'] not in VALID_VENDORS:
-        raise HTTPException(status_code=400, detail=f'Invalid vendor: {updates["vendor"]}')
+    if 'vendor' in updates and not updates['vendor'].strip():
+        raise HTTPException(status_code=400, detail='Vendor cannot be empty')
 
     result = supabase.table('inventory_items').update(updates).eq('id', item_id).execute()
     return {'message': 'Item updated', 'item': _enrich(result.data[0])}

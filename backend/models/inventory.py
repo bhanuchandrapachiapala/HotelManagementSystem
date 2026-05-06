@@ -118,7 +118,9 @@ CATEGORY_COLORS: dict[str, str] = {
     'cleaning_supplies': 'bg-green-100 text-green-600',
     'front_desk': 'bg-gray-100 text-gray-600',
 }
-VALID_VENDORS = ['sysco', 'costco', 'webstaurantstore', 'members_mark', 'other']
+# Default vendor slugs shown in the UI dropdown; not enforced as a constraint.
+# The DB-level check constraint was removed in migration 005_remove_vendor_constraint.sql.
+DEFAULT_VENDORS = ['sysco', 'costco', 'webstaurantstore', 'members_mark', 'other']
 
 CATEGORY_LABELS = {
     'breakfast_food': 'Breakfast & Food',
