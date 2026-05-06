@@ -323,6 +323,7 @@ export interface InventoryItem {
   last_checked_at?: string
   last_checked_by?: string
   status?: 'critical' | 'low' | 'ok'
+  icon?: string
   created_at: string
   updated_at: string
 }

@@ -186,7 +186,9 @@ export default function InventoryStockCheckPage() {
                         onClick={() => handleSelectCategory(cat.key)}
                         className="bg-white rounded-[16px] shadow-sm border border-gray-100 px-5 py-4 flex items-center gap-4 h-16 text-left hover:border-orange/40 hover:shadow-md transition-all active:scale-[0.98]"
                       >
-                        <span className="text-2xl flex-shrink-0">{cat.icon}</span>
+                        <span className="text-2xl flex-shrink-0">
+                          {catItems[0]?.icon ?? cat.icon}
+                        </span>
                         <div className="flex-1 min-w-0">
                           <p className="text-base font-semibold text-brand-black leading-snug">
                             {cat.label}

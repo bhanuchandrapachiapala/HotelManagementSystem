@@ -11,6 +11,7 @@ from models.inventory import (
     UpdateQuantityRequest,
     VALID_CATEGORIES,
     VALID_VENDORS,
+    ITEM_EMOJIS,
     compute_status,
 )
 
@@ -22,6 +23,7 @@ def _enrich(row: dict) -> dict:
         float(row.get('current_quantity', 0)),
         float(row.get('min_quantity', 1)),
     )
+    row['icon'] = ITEM_EMOJIS.get(row.get('name', ''), '📦')
     return row
 
 

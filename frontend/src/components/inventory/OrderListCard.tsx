@@ -1,4 +1,12 @@
 import { cn } from '../../lib/utils'
+
+const CATEGORY_BG: Record<string, string> = {
+  breakfast_food: 'bg-orange-100',
+  disposables: 'bg-blue-100',
+  room_amenities: 'bg-purple-100',
+  cleaning_supplies: 'bg-green-100',
+  front_desk: 'bg-gray-100',
+}
 import type { InventoryItem } from '../../types'
 
 const VENDOR_LABELS: Record<string, string> = {
@@ -84,6 +92,9 @@ export default function OrderListCard({
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0', CATEGORY_BG[item.category] ?? 'bg-gray-100')}>
+                    {item.icon ?? '📦'}
+                  </span>
                   <span className="text-sm font-semibold text-brand-black">
                     {item.name}
                   </span>

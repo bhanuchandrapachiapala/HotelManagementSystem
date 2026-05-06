@@ -10,6 +10,14 @@ const VENDOR_COLORS: Record<string, string> = {
   other: 'bg-gray-100 text-gray-500',
 }
 
+const CATEGORY_BG: Record<string, string> = {
+  breakfast_food: 'bg-orange-100',
+  disposables: 'bg-blue-100',
+  room_amenities: 'bg-purple-100',
+  cleaning_supplies: 'bg-green-100',
+  front_desk: 'bg-gray-100',
+}
+
 const VENDOR_LABELS: Record<string, string> = {
   sysco: 'Sysco',
   costco: 'Costco',
@@ -89,6 +97,9 @@ export default function StockCheckItem({ item, value, onChange }: Props) {
   return (
     <div className="pb-4 border-b border-gray-100 last:border-0">
       <div className="flex flex-wrap items-center gap-2 mb-1">
+        <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0', CATEGORY_BG[item.category] ?? 'bg-gray-100')}>
+          {item.icon ?? '📦'}
+        </span>
         <h3 className="text-lg font-bold text-brand-black">{item.name}</h3>
         <span
           className={cn(
