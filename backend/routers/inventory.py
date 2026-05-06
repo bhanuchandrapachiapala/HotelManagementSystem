@@ -168,6 +168,16 @@ def mark_ordered(body: MarkOrderedRequest):
     return {'message': f'{marked} items marked as ordered'}
 
 
+# ── GET /vendors ─────────────────────────────────────────────────────────────
+
+@router.get('/vendors')
+def list_vendors():
+    supabase = get_supabase()
+    result = supabase.table('inventory_items').select('vendor').eq('is_active', True).execute()
+    vendors = sorted({row['vendor'] for row in (result.data or []) if row.get('vendor')})
+    return {'vendors': vendors}
+
+
 # ── GET /items ────────────────────────────────────────────────────────────────
 
 @router.get('/items')

@@ -3,6 +3,7 @@ import {
   getInventoryItems,
   getInventoryAlerts,
   getInventoryHistory,
+  getInventoryVendors,
   updateItemQuantity,
   bulkUpdateInventory,
   markItemsOrdered,
@@ -33,6 +34,14 @@ export function useInventoryHistory() {
   return useQuery({
     queryKey: ['inventory-history'],
     queryFn: getInventoryHistory,
+    staleTime: STALE,
+  })
+}
+
+export function useInventoryVendors() {
+  return useQuery({
+    queryKey: ['inventory-vendors'],
+    queryFn: getInventoryVendors,
     staleTime: STALE,
   })
 }
@@ -88,6 +97,7 @@ export function useAddInventoryItem() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['inventory-items'] })
       qc.invalidateQueries({ queryKey: ['inventory-alerts'] })
+      qc.invalidateQueries({ queryKey: ['inventory-vendors'] })
     },
   })
 }
@@ -105,6 +115,7 @@ export function useUpdateInventoryItem() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['inventory-items'] })
       qc.invalidateQueries({ queryKey: ['inventory-alerts'] })
+      qc.invalidateQueries({ queryKey: ['inventory-vendors'] })
     },
   })
 }

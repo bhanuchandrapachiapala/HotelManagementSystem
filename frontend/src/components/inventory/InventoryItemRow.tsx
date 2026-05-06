@@ -68,11 +68,10 @@ interface Props {
     }
   ) => void
   isUpdating: boolean
+  vendorList: string[]
 }
 
-const KNOWN_VENDOR_KEYS = Object.keys(VENDOR_LABELS)
-
-export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) {
+export default function InventoryItemRow({ item, onUpdate, isUpdating, vendorList }: Props) {
   const [editing, setEditing] = useState(false)
   const [confirmDeactivate, setConfirmDeactivate] = useState(false)
   const [form, setForm] = useState({
@@ -82,7 +81,7 @@ export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) 
     unit: item.unit,
     notes: item.notes ?? '',
   })
-  const [vendorCustom, setVendorCustom] = useState(!KNOWN_VENDOR_KEYS.includes(item.vendor))
+  const [vendorCustom, setVendorCustom] = useState(!vendorList.includes(item.vendor))
 
   const status = computeStatus(item)
   const dotClass = STATUS_DOT[status]
@@ -181,8 +180,8 @@ export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) 
                 }}
                 className="w-full border border-gray-200 focus:border-orange rounded-[10px] px-3 py-2 text-sm outline-none bg-white"
               >
-                {Object.entries(VENDOR_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
+                {vendorList.map((v) => (
+                  <option key={v} value={v}>{VENDOR_LABELS[v] ?? v}</option>
                 ))}
                 <option value="__custom__">＋ Other / Custom vendor...</option>
               </select>
@@ -211,7 +210,7 @@ export default function InventoryItemRow({ item, onUpdate, isUpdating }: Props) 
             Save
           </button>
           <button
-            onClick={() => { setEditing(false); setVendorCustom(!KNOWN_VENDOR_KEYS.includes(item.vendor)) }}
+            onClick={() => { setEditing(false); setVendorCustom(!vendorList.includes(item.vendor)) }}
             className="flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X size={14} />

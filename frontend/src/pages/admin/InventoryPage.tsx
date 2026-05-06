@@ -20,6 +20,7 @@ import {
   useInventoryItems,
   useInventoryAlerts,
   useInventoryHistory,
+  useInventoryVendors,
   useMarkOrdered,
   useAddInventoryItem,
   useUpdateInventoryItem,
@@ -95,6 +96,8 @@ const EMPTY_ADD_FORM = {
   notes: '',
 }
 
+const DEFAULT_VENDOR_SLUGS = ['sysco', 'costco', 'webstaurantstore', 'members_mark']
+
 // ─── Stock Status Tab ─────────────────────────────────────────────────────────
 
 function StockStatusTab() {
@@ -106,6 +109,12 @@ function StockStatusTab() {
   const [addVendorCustom, setAddVendorCustom] = useState(false)
 
   const { data: itemsData, isLoading } = useInventoryItems()
+  const { data: vendorsData } = useInventoryVendors()
+
+  const vendorList = useMemo(() => {
+    const fetched = vendorsData?.vendors ?? []
+    return Array.from(new Set([...DEFAULT_VENDOR_SLUGS, ...fetched]))
+  }, [vendorsData])
   const addItem = useAddInventoryItem()
   const updateItem = useUpdateInventoryItem()
 
@@ -369,8 +378,8 @@ function StockStatusTab() {
                     }
                   }}
                 >
-                  {Object.entries(VENDOR_LABELS).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
+                  {vendorList.map((v) => (
+                    <option key={v} value={v}>{VENDOR_LABELS[v] ?? v}</option>
                   ))}
                   <option value="__custom__">＋ Other / Custom vendor...</option>
                 </select>
@@ -479,6 +488,7 @@ function StockStatusTab() {
                       item={item}
                       onUpdate={handleUpdate}
                       isUpdating={updateItem.isPending}
+                      vendorList={vendorList}
                     />
                   ))}
                 </div>

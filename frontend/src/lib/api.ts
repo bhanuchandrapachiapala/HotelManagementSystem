@@ -227,6 +227,10 @@ export function getInventoryHistory(): Promise<{ logs: InventoryLog[] }> {
   return apiFetch('/api/inventory/history')
 }
 
+export function getInventoryVendors(): Promise<{ vendors: string[] }> {
+  return apiFetch('/api/inventory/vendors')
+}
+
 export function updateItemQuantity(
   itemId: number,
   data: { current_quantity: number; updated_by: string; change_type?: string; notes?: string },
