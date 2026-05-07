@@ -792,7 +792,6 @@ export default function GroupContractsPage() {
             <LoadingSpinner />
           ) : pipeline.length === 0 ? (
             <EmptyState
-              icon="🏨"
               message="No active group bookings"
               subtext={
                 statusFilter !== 'all'
