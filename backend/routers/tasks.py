@@ -221,6 +221,7 @@ def get_task_history(days: int = Query(default=7, le=30)):
 
 @router.post("/submit", status_code=201)
 def submit_checklist(body: SubmitChecklistRequest):
+    print(f"[tasks submit] received date={body.date}, server_today={date.today()}")
     db = get_supabase()
     db.table("task_completions").delete().eq("date", body.date).execute()
 

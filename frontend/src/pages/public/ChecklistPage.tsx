@@ -43,7 +43,8 @@ export default function ChecklistPage() {
       )
       if (checked.size === 6) setAllComplete(true)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
+      const err = e as { detail?: string; message?: string }
+      setError(err?.detail || err?.message || 'Failed to save. Please try again.')
     }
   }
 

@@ -39,9 +39,10 @@ class SubmitChecklistRequest(BaseModel):
     def date_must_be_today(cls, v: str) -> str:
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", v):
             raise ValueError("date must be in YYYY-MM-DD format")
-        today = date.today().isoformat()
-        if v != today:
-            raise ValueError("Can only submit for today's date")
+        submitted = date.fromisoformat(v)
+        today = date.today()
+        if abs((submitted - today).days) > 1:
+            raise ValueError("Can only submit for today's or yesterday's date")
         return v
 
     @field_validator("task_ids")
