@@ -7,7 +7,9 @@ export default function GroupInquiryPage() {
   const [activeSlide, setActiveSlide] = useState(0)
   const [counters, setCounters] = useState({ rooms: 0, shuttle: 0, miles: 0 })
   const [cardsVisible, setCardsVisible] = useState(false)
+  const [showStickyHeader, setShowStickyHeader] = useState(false)
   const featuresRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLElement | null>(null)
 
   // Form state
   const [form, setForm] = useState({
@@ -59,6 +61,18 @@ export default function GroupInquiryPage() {
       { threshold: 0.1 }
     )
     observer.observe(featuresRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  // IntersectionObserver for sticky header (show when hero scrolls out)
+  useEffect(() => {
+    const el = heroRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      entries => setShowStickyHeader(!entries[0].isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(el)
     return () => observer.disconnect()
   }, [])
 
@@ -141,12 +155,12 @@ export default function GroupInquiryPage() {
     }`
 
   const features = [
-    { icon: '✈️', title: 'Airport Proximity', desc: 'Just 2.5 miles from Portland International Jetport — only 8 minutes away. No long rides, no waiting.' },
-    { icon: '🚐', title: 'Free 24/7 Shuttle Service', desc: 'Complimentary airport shuttle running around the clock. We\'re there whenever your team lands, day or night.' },
-    { icon: '🍳', title: 'Complimentary Breakfast', desc: 'Start every morning right with our complimentary continental breakfast served daily from 6:30 to 9:30 AM.' },
-    { icon: '💪', title: 'Fitness Center', desc: 'Keep your routine on the road with our fully equipped fitness center featuring cardio machines and free weights.' },
-    { icon: '🏢', title: 'Group-Friendly Rates', desc: 'Special negotiated rates for groups of 10+ rooms. Flexible room types including Standard, Triple, and Quad configurations.' },
-    { icon: '🌿', title: 'Peaceful Environment', desc: 'Professional atmosphere with quiet hours from 9 PM–7 AM. Perfect for teams that need rest and focus.' },
+    { icon: '✈️', title: 'Airport Proximity', desc: 'Just 2.5 miles from Portland International Jetport — only 8 minutes away. No long rides, no waiting.', bg: 'bg-blue-50' },
+    { icon: '🚐', title: 'Free 24/7 Shuttle Service', desc: 'Complimentary airport shuttle running around the clock. We\'re there whenever your team lands, day or night.', bg: 'bg-orange-light' },
+    { icon: '🍳', title: 'Complimentary Breakfast', desc: 'Start every morning right with our complimentary continental breakfast served daily from 6:30 to 9:30 AM.', bg: 'bg-amber-50' },
+    { icon: '💪', title: 'Fitness Center', desc: 'Keep your routine on the road with our fully equipped fitness center featuring cardio machines and free weights.', bg: 'bg-green-50' },
+    { icon: '🏢', title: 'Group-Friendly Rates', desc: 'Special negotiated rates for groups of 10+ rooms. Flexible room types including Standard, Triple, and Quad configurations.', bg: 'bg-purple-50' },
+    { icon: '🌿', title: 'Peaceful Environment', desc: 'Professional atmosphere with quiet hours from 9 PM–7 AM. Perfect for teams that need rest and focus.', bg: 'bg-teal-50' },
   ]
 
   const amenities = [
@@ -159,8 +173,23 @@ export default function GroupInquiryPage() {
   return (
     <div className="min-h-screen bg-white font-body">
 
+      {/* ── STICKY HEADER ── */}
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b border-gray-100 h-14 px-6 flex items-center justify-between transition-transform duration-300 ${showStickyHeader ? 'translate-y-0' : '-translate-y-full'}`}
+      >
+        <span className="font-display text-sm font-bold uppercase tracking-widest text-brand-black">
+          Casco Bay Hotel
+        </span>
+        <button
+          onClick={scrollToForm}
+          className="bg-orange hover:bg-orange-dark text-white text-sm font-semibold px-4 py-2 rounded-[10px] transition-colors"
+        >
+          Request Group Rate
+        </button>
+      </header>
+
       {/* ── SECTION 1: HERO ── */}
-      <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+      <section ref={heroRef} className="relative h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden">
         {/* Image carousel */}
         {slides.map((src, i) => (
           <img
@@ -172,7 +201,7 @@ export default function GroupInquiryPage() {
           />
         ))}
         {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/55 to-black/30" />
 
         {/* Hero content */}
         <div className="relative z-10 text-center text-white px-4 max-w-3xl mx-auto">
@@ -221,7 +250,7 @@ export default function GroupInquiryPage() {
       </section>
 
       {/* ── SECTION 2: WHY CHOOSE US ── */}
-      <section className="py-20 px-4 bg-gray-50" ref={featuresRef}>
+      <section className="py-14 px-4 bg-gray-50" ref={featuresRef}>
         <div className="max-w-[900px] mx-auto">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-bold text-brand-black text-center">
@@ -237,15 +266,15 @@ export default function GroupInquiryPage() {
             {features.map((f, i) => (
               <div
                 key={f.title}
-                className={`bg-white rounded-card p-6 border border-gray-100 shadow-sm transition-all duration-500 hover:shadow-md hover:-translate-y-1 hover:border-l-4 hover:border-l-orange ${
+                className={`bg-white rounded-card p-7 border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-l-4 hover:border-orange ${
                   cardsVisible
                     ? 'opacity-100 translate-y-0'
                     : 'opacity-0 translate-y-6'
                 }`}
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
-                <div className="text-3xl mb-3">{f.icon}</div>
-                <h3 className="font-display text-lg font-bold text-brand-black mb-2">{f.title}</h3>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4 ${f.bg}`}>{f.icon}</div>
+                <h3 className="font-display text-lg font-semibold text-brand-black mb-2">{f.title}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
@@ -254,7 +283,7 @@ export default function GroupInquiryPage() {
       </section>
 
       {/* ── SECTION 3: ROOM SHOWCASE ── */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-14 px-4 bg-white">
         <div className="max-w-[900px] mx-auto">
           <div className="text-center mb-10">
             <h2 className="font-display text-3xl font-bold text-brand-black text-center">Our Spaces</h2>
@@ -265,15 +294,15 @@ export default function GroupInquiryPage() {
               { src: '/images/lobby.jpg', caption: 'Modern Common Areas' },
               { src: '/images/room.jpg', caption: 'Comfortable Guest Rooms' },
             ].map(({ src, caption }) => (
-              <div key={caption} className="relative overflow-hidden rounded-card group aspect-[4/3] bg-gray-100">
+              <div key={caption} className="relative overflow-hidden rounded-card group h-72 bg-gray-100">
                 <img
                   src={src}
                   alt={caption}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/35 transition-colors duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <p className="text-white font-display font-semibold text-lg drop-shadow-md">{caption}</p>
+                  <p className="text-white font-display text-xl font-bold drop-shadow-md">{caption}</p>
                 </div>
               </div>
             ))}
@@ -282,18 +311,18 @@ export default function GroupInquiryPage() {
       </section>
 
       {/* ── SECTION 4: WHAT'S INCLUDED ── */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section className="py-14 px-4 bg-gray-50">
         <div className="max-w-[900px] mx-auto">
           <div className="text-center mb-10">
             <h2 className="font-display text-3xl font-bold text-brand-black text-center">What's Included</h2>
             <p className="text-gray-500">Every group booking includes these amenities at no extra cost</p>
             <div className="w-10 h-[2px] bg-orange rounded-full mx-auto mt-3 mb-8" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[700px] mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[700px] mx-auto">
             {amenities.map(item => (
-              <div key={item} className="flex items-center gap-3">
+              <div key={item} className="flex items-center gap-3 bg-white border border-gray-100 rounded-card px-5 py-3 shadow-sm hover:border-orange hover:shadow-md transition-all duration-200">
                 <span className="text-orange font-bold text-lg flex-shrink-0">✓</span>
-                <span className="text-gray-700 text-sm">{item}</span>
+                <span className="text-sm font-medium text-gray-700">{item}</span>
               </div>
             ))}
           </div>
@@ -301,7 +330,7 @@ export default function GroupInquiryPage() {
       </section>
 
       {/* ── SECTION 5: INQUIRY FORM ── */}
-      <section id="inquiry-form" className="py-20 px-4 bg-white">
+      <section id="inquiry-form" className="py-14 px-4 bg-white">
         <div className="max-w-[640px] mx-auto">
           <div className="text-center mb-8">
             <h2 className="font-display text-3xl font-bold text-brand-black text-center">Request Your Group Rate</h2>
@@ -309,7 +338,7 @@ export default function GroupInquiryPage() {
             <div className="w-10 h-[2px] bg-orange rounded-full mx-auto mt-3 mb-8" />
           </div>
 
-          <div className="bg-white rounded-card shadow-sm border-t-4 border-t-orange border border-gray-100 p-8">
+          <div className="bg-white rounded-card shadow-sm border-l-4 border-l-orange border border-gray-100 p-8">
             {submitted ? (
               /* Success state */
               <div className="text-center py-6">
@@ -457,7 +486,7 @@ export default function GroupInquiryPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-4 text-base font-bold text-white rounded-xl bg-gradient-to-r from-orange to-yellow-hotel hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full py-4 text-base font-bold text-white rounded-[10px] bg-orange hover:bg-orange-dark hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {submitting ? 'Sending…' : 'Send Inquiry →'}
                 </button>
@@ -488,14 +517,14 @@ export default function GroupInquiryPage() {
             <div
               ref={el => { contractRefs.current[0] = el }}
               style={contractCardStyle(0)}
-              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+              className="bg-white rounded-card border border-gray-100 border-l-4 border-l-orange overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(0)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-orange-light">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 bg-orange-light">
                     💳
                   </div>
                   <h3 className="font-display text-lg font-bold text-brand-black">Method of Payment</h3>
@@ -537,14 +566,14 @@ export default function GroupInquiryPage() {
             <div
               ref={el => { contractRefs.current[1] = el }}
               style={contractCardStyle(1)}
-              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+              className="bg-white rounded-card border border-gray-100 border-l-4 border-l-red-400 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(1)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-red-50">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 bg-red-100">
                     📋
                   </div>
                   <h3 className="font-display text-lg font-bold text-brand-black">Cancellation Policy</h3>
@@ -585,14 +614,14 @@ export default function GroupInquiryPage() {
             <div
               ref={el => { contractRefs.current[2] = el }}
               style={contractCardStyle(2)}
-              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+              className="bg-white rounded-card border border-gray-100 border-l-4 border-l-blue-400 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(2)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-blue-50">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 bg-blue-100">
                     📜
                   </div>
                   <h3 className="font-display text-lg font-bold text-brand-black">Terms & Conditions</h3>
@@ -627,14 +656,14 @@ export default function GroupInquiryPage() {
             <div
               ref={el => { contractRefs.current[3] = el }}
               style={contractCardStyle(3)}
-              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+              className="bg-white rounded-card border border-gray-100 border-l-4 border-l-amber-400 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(3)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-amber-50">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 bg-amber-100">
                     ⚠️
                   </div>
                   <h3 className="font-display text-lg font-bold text-brand-black">Damages & Liability</h3>
@@ -671,14 +700,14 @@ export default function GroupInquiryPage() {
             <div
               ref={el => { contractRefs.current[4] = el }}
               style={contractCardStyle(4)}
-              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+              className="bg-white rounded-card border border-gray-100 border-l-4 border-l-green-500 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(4)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-green-50">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 bg-green-100">
                     ✍️
                   </div>
                   <h3 className="font-display text-lg font-bold text-brand-black">Agreement & Signature</h3>
