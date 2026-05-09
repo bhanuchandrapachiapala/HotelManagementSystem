@@ -103,15 +103,19 @@ export default function InventoryStockCheckPage() {
   const selectedCatMeta = CATEGORIES.find((c) => c.key === selectedCategory)
 
   return (
-    <div className="min-h-screen bg-[#F8F7F5] pb-32 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden">
       <div className="max-w-lg mx-auto px-4 pt-8">
         {/* Page Header */}
         <div className="text-center mb-8">
-          <h1 className="font-display text-2xl font-bold text-brand-black">CASCO BAY HOTEL</h1>
-          <p className="text-gray-400 text-sm tracking-widest uppercase mt-1">Stock Check</p>
-          <div className="mt-3 inline-block bg-gradient-to-r from-orange to-yellow-hotel text-white text-sm px-4 py-1 rounded-full">
+          <h1 className="font-display text-2xl font-bold tracking-widest uppercase text-center text-gray-900">
+            Casco Bay Hotel
+          </h1>
+          <p className="text-[10px] uppercase tracking-widest text-gray-400 text-center mt-1 font-semibold">
+            Stock Check
+          </p>
+          <span className="inline-block mt-3 bg-orange text-white text-sm px-4 py-1.5 rounded-full font-semibold">
             {todayDisplay}
-          </div>
+          </span>
         </div>
 
         {/* Step 1 — Name Entry */}
@@ -126,8 +130,7 @@ export default function InventoryStockCheckPage() {
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleStartStockCheck()}
               placeholder="Enter your name…"
-              className="border border-gray-200 focus:border-orange focus:ring-2 focus:ring-orange/10 rounded-[10px] px-4 py-3 w-full outline-none text-brand-black"
-              style={{ fontSize: '16px' }}
+              className="border border-gray-200 focus:border-orange focus:ring-2 focus:ring-orange/10 rounded-[10px] px-4 py-3 w-full outline-none text-brand-black text-base"
             />
             <button
               type="button"
@@ -148,7 +151,7 @@ export default function InventoryStockCheckPage() {
             ) : allDone ? (
               <div className="bg-white rounded-card shadow-sm border border-gray-100 p-8 text-center max-w-md mx-auto">
                 <div className="text-5xl mb-4">🎉</div>
-                <h2 className="font-display text-xl font-bold text-brand-black mb-2">
+                <h2 className="font-display text-base font-semibold mb-4">
                   All done! Stock check complete.
                 </h2>
                 <p className="text-gray-400 text-sm mb-6">
@@ -164,7 +167,7 @@ export default function InventoryStockCheckPage() {
               </div>
             ) : (
               <>
-                <h2 className="font-display text-xl font-bold text-brand-black mb-1">
+                <h2 className="font-display text-base font-semibold mb-1">
                   Good morning, {committedName}!
                 </h2>
                 <p className="text-sm text-gray-400 mb-6">
@@ -184,7 +187,7 @@ export default function InventoryStockCheckPage() {
                         key={cat.key}
                         type="button"
                         onClick={() => handleSelectCategory(cat.key)}
-                        className="bg-white rounded-[16px] shadow-sm border border-gray-100 px-5 py-4 flex items-center gap-4 h-16 text-left hover:border-orange/40 hover:shadow-md transition-all active:scale-[0.98]"
+                        className="bg-white rounded-card shadow-sm border border-gray-100 px-5 py-4 flex items-center gap-4 h-16 text-left hover:border-orange/40 hover:shadow-md transition-all active:scale-[0.98]"
                       >
                         <span className="text-2xl flex-shrink-0">
                           {catItems[0]?.icon ?? cat.icon}
@@ -226,7 +229,7 @@ export default function InventoryStockCheckPage() {
               ← All Categories
             </button>
 
-            <h2 className="font-display text-xl font-bold text-brand-black mb-4">
+            <h2 className="font-display text-base font-semibold mb-4">
               {selectedCatMeta.icon} {selectedCatMeta.label}
             </h2>
 

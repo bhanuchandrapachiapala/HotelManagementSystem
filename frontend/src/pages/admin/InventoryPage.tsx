@@ -14,6 +14,7 @@ import {
 import PageWrapper from '../../components/layout/PageWrapper'
 import SectionCard from '../../components/ui/SectionCard'
 import TabNav from '../../components/ui/TabNav'
+import StatCard from '../../components/ui/StatCard'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import {
@@ -210,50 +211,52 @@ function StockStatusTab() {
   }
 
   const inputCls =
-    'w-full border border-gray-200 focus:border-orange focus:ring-1 focus:ring-orange/20 rounded-[10px] px-3 py-2 text-sm outline-none bg-white'
+    'w-full border border-gray-200 focus:border-orange focus:ring-2 focus:ring-orange/10 rounded-[10px] px-3 py-2 text-sm outline-none bg-white'
 
   return (
     <div>
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-3">
-        {CATEGORY_FILTER_BUTTONS.map((btn) => (
-          <button
-            key={btn.key}
-            onClick={() => setCategoryFilter(btn.key)}
-            className={cn(
-              'text-xs font-semibold px-3 py-1.5 rounded-full transition-colors',
-              categoryFilter === btn.key
-                ? 'bg-orange text-white'
-                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-            )}
-          >
-            {btn.label}
-          </button>
-        ))}
+      {/* KPI stat row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+        <StatCard
+          label="Total Items"
+          value={isLoading ? '—' : allItems.length}
+          icon="📦"
+          accentColor="orange"
+          loading={isLoading}
+        />
+        <StatCard
+          label="Critical"
+          value={isLoading ? '—' : criticalCount}
+          icon="🔴"
+          accentColor="red"
+          loading={isLoading}
+        />
+        <StatCard
+          label="Low Stock"
+          value={isLoading ? '—' : lowCount}
+          icon="🟡"
+          accentColor="yellow"
+          loading={isLoading}
+        />
+        <StatCard
+          label="OK"
+          value={isLoading ? '—' : okCount}
+          icon="✅"
+          accentColor="green"
+          loading={isLoading}
+        />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <select
-          value={vendorFilter}
-          onChange={(e) => setVendorFilter(e.target.value)}
-          className="border border-gray-200 focus:border-orange rounded-[10px] px-3 py-1.5 text-sm outline-none bg-white"
-        >
-          <option value="all">All Vendors</option>
-          {Object.entries(VENDOR_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </select>
-
-        <div className="flex gap-2 flex-wrap">
-          {STATUS_FILTER_BUTTONS.map((btn) => (
+      {/* Filters */}
+      <SectionCard className="mb-5">
+        <div className="flex flex-wrap gap-2 mb-3">
+          {CATEGORY_FILTER_BUTTONS.map((btn) => (
             <button
               key={btn.key}
-              onClick={() => setStatusFilter(btn.key)}
+              onClick={() => setCategoryFilter(btn.key)}
               className={cn(
                 'text-xs font-semibold px-3 py-1.5 rounded-full transition-colors',
-                statusFilter === btn.key
+                categoryFilter === btn.key
                   ? 'bg-orange text-white'
                   : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
               )}
@@ -263,39 +266,46 @@ function StockStatusTab() {
           ))}
         </div>
 
-        <button
-          onClick={() => setShowAddForm((v) => !v)}
-          className="ml-auto flex items-center gap-1.5 bg-orange hover:bg-orange-dark text-white font-semibold rounded-[10px] px-4 py-2 text-sm transition-colors"
-        >
-          <Plus size={14} />
-          Add Item
-        </button>
-      </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={vendorFilter}
+            onChange={(e) => setVendorFilter(e.target.value)}
+            className="border border-gray-200 focus:border-orange focus:ring-2 focus:ring-orange/10 rounded-[10px] px-3 py-1.5 text-sm outline-none bg-white"
+          >
+            <option value="all">All Vendors</option>
+            {Object.entries(VENDOR_LABELS).map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </select>
 
-      {/* Summary mini-stats */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
-        <div className="bg-white rounded-card border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-red flex-shrink-0" />
-          <div>
-            <p className="text-xl font-bold text-brand-black">{criticalCount}</p>
-            <p className="text-xs text-gray-400">Critical</p>
+          <div className="flex gap-2 flex-wrap">
+            {STATUS_FILTER_BUTTONS.map((btn) => (
+              <button
+                key={btn.key}
+                onClick={() => setStatusFilter(btn.key)}
+                className={cn(
+                  'text-xs font-semibold px-3 py-1.5 rounded-full transition-colors',
+                  statusFilter === btn.key
+                    ? 'bg-orange text-white'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                )}
+              >
+                {btn.label}
+              </button>
+            ))}
           </div>
+
+          <button
+            onClick={() => setShowAddForm((v) => !v)}
+            className="ml-auto flex items-center gap-1.5 bg-orange hover:bg-orange-dark text-white font-semibold rounded-[10px] px-4 py-2 text-sm transition-colors"
+          >
+            <Plus size={14} />
+            Add Item
+          </button>
         </div>
-        <div className="bg-white rounded-card border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-yellow-hotel flex-shrink-0" />
-          <div>
-            <p className="text-xl font-bold text-brand-black">{lowCount}</p>
-            <p className="text-xs text-gray-400">Low</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-card border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-green flex-shrink-0" />
-          <div>
-            <p className="text-xl font-bold text-brand-black">{okCount}</p>
-            <p className="text-xs text-gray-400">OK</p>
-          </div>
-        </div>
-      </div>
+      </SectionCard>
 
       {/* Add item form */}
       {showAddForm && (
@@ -554,19 +564,19 @@ function OrderListTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="font-display text-base font-semibold text-brand-black">
-          Items Needing Reorder
-        </h2>
-        <button
-          onClick={handleMarkSelected}
-          disabled={markOrdered.isPending || allAlertItems.length === 0}
-          className="flex items-center gap-1.5 bg-orange hover:bg-orange-dark text-white font-semibold rounded-[10px] px-4 py-2 text-sm transition-colors disabled:opacity-40"
-        >
-          <CheckCircle size={14} />
-          Mark All Ordered
-        </button>
-      </div>
+      <SectionCard className="mb-5">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-base font-semibold">Items Needing Reorder</h2>
+          <button
+            onClick={handleMarkSelected}
+            disabled={markOrdered.isPending || allAlertItems.length === 0}
+            className="flex items-center gap-1.5 bg-orange hover:bg-orange-dark text-white font-semibold rounded-[10px] px-4 py-2 text-sm transition-colors disabled:opacity-40"
+          >
+            <CheckCircle size={14} />
+            Mark All Ordered
+          </button>
+        </div>
+      </SectionCard>
 
       {isLoading ? (
         <LoadingSpinner />

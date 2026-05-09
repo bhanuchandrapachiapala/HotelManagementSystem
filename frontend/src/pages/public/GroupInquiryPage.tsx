@@ -23,7 +23,6 @@ export default function GroupInquiryPage() {
   // Contract/policy section state
   const [contractVisible, setContractVisible] = useState([false, false, false, false, false])
   const [contractOpen, setContractOpen] = useState([true, false, false, false, false])
-  const [contractHovered, setContractHovered] = useState([false, false, false, false, false])
   const contractRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null])
 
   const slides = ['/images/lobby.jpg', '/images/room.jpg']
@@ -85,14 +84,11 @@ export default function GroupInquiryPage() {
   }
 
   function contractCardStyle(i: number) {
-    const h = contractHovered[i]
     const v = contractVisible[i]
     return {
       opacity: v ? 1 : 0,
-      transform: v ? `translateY(${h ? -3 : 0}px)` : 'translateY(30px)',
-      transition: `opacity 0.5s ease ${i * 150}ms, transform 0.5s ease ${i * 150}ms, box-shadow 0.2s ease 0s`,
-      boxShadow: h ? '0 8px 28px rgba(0,0,0,0.12)' : '0 1px 4px rgba(0,0,0,0.06)',
-      borderLeft: h ? '3px solid #F47920' : undefined,
+      transform: v ? 'translateY(0)' : 'translateY(30px)',
+      transition: `opacity 0.5s ease ${i * 150}ms, transform 0.5s ease ${i * 150}ms`,
     }
   }
 
@@ -140,10 +136,8 @@ export default function GroupInquiryPage() {
   }
 
   const inputCls = (field: string) =>
-    `w-full border rounded-xl px-4 py-3 text-sm outline-none transition-colors font-body ${
-      errors[field]
-        ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-        : 'border-gray-200 focus:border-[#F47920] focus:ring-2 focus:ring-[#F47920]/10'
+    `w-full border border-gray-200 rounded-[10px] px-4 py-2.5 text-sm outline-none transition-colors font-body focus:border-orange focus:ring-2 focus:ring-orange/10 ${
+      errors[field] ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : ''
     }`
 
   const features = [
@@ -198,7 +192,7 @@ export default function GroupInquiryPage() {
               { value: counters.miles, label: 'Miles to Airport', suffix: '' },
             ].map(({ value, label, suffix }) => (
               <div key={label} className="text-center">
-                <p className="font-display text-3xl md:text-4xl font-bold text-[#FDB924]">
+                <p className="font-display text-3xl md:text-4xl font-bold text-yellow-hotel">
                   {value}{suffix}
                 </p>
                 <p className="text-xs uppercase tracking-widest text-white/60 mt-1">{label}</p>
@@ -208,7 +202,7 @@ export default function GroupInquiryPage() {
 
           <button
             onClick={scrollToForm}
-            className="bg-[#F47920] hover:bg-[#d96810] text-white font-bold px-10 py-4 rounded-full text-base transition-all hover:shadow-xl hover:-translate-y-0.5"
+            className="bg-orange hover:bg-orange-dark text-white font-bold px-10 py-4 rounded-full text-base transition-all hover:shadow-xl hover:-translate-y-0.5"
           >
             Request Group Rate →
           </button>
@@ -227,23 +221,23 @@ export default function GroupInquiryPage() {
       </section>
 
       {/* ── SECTION 2: WHY CHOOSE US ── */}
-      <section className="py-20 px-4 bg-[#FAFAFA]" ref={featuresRef}>
+      <section className="py-20 px-4 bg-gray-50" ref={featuresRef}>
         <div className="max-w-[900px] mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-3">
+            <h2 className="font-display text-3xl font-bold text-brand-black text-center">
               Why Groups Choose Casco Bay Hotel
             </h2>
             <p className="text-gray-500 text-lg max-w-xl mx-auto">
               The perfect base for corporate teams, sports groups, and organizations
             </p>
-            <div className="mx-auto mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-[#F47920] to-[#FDB924]" />
+            <div className="w-10 h-[2px] bg-orange rounded-full mx-auto mt-3 mb-8" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f, i) => (
               <div
                 key={f.title}
-                className={`bg-white rounded-2xl p-6 border border-gray-100 shadow-sm transition-all duration-500 hover:shadow-md hover:-translate-y-1 hover:border-l-4 hover:border-l-[#F47920] ${
+                className={`bg-white rounded-card p-6 border border-gray-100 shadow-sm transition-all duration-500 hover:shadow-md hover:-translate-y-1 hover:border-l-4 hover:border-l-orange ${
                   cardsVisible
                     ? 'opacity-100 translate-y-0'
                     : 'opacity-0 translate-y-6'
@@ -251,7 +245,7 @@ export default function GroupInquiryPage() {
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
                 <div className="text-3xl mb-3">{f.icon}</div>
-                <h3 className="font-display text-lg font-bold text-[#1A1A1A] mb-2">{f.title}</h3>
+                <h3 className="font-display text-lg font-bold text-brand-black mb-2">{f.title}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
@@ -263,15 +257,15 @@ export default function GroupInquiryPage() {
       <section className="py-20 px-4 bg-white">
         <div className="max-w-[900px] mx-auto">
           <div className="text-center mb-10">
-            <h2 className="font-display text-3xl font-bold text-[#1A1A1A] mb-2">Our Spaces</h2>
-            <div className="mx-auto mt-3 h-[3px] w-12 rounded-full bg-gradient-to-r from-[#F47920] to-[#FDB924]" />
+            <h2 className="font-display text-3xl font-bold text-brand-black text-center">Our Spaces</h2>
+            <div className="w-10 h-[2px] bg-orange rounded-full mx-auto mt-3 mb-8" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
               { src: '/images/lobby.jpg', caption: 'Modern Common Areas' },
               { src: '/images/room.jpg', caption: 'Comfortable Guest Rooms' },
             ].map(({ src, caption }) => (
-              <div key={caption} className="relative overflow-hidden rounded-2xl group aspect-[4/3] bg-gray-100">
+              <div key={caption} className="relative overflow-hidden rounded-card group aspect-[4/3] bg-gray-100">
                 <img
                   src={src}
                   alt={caption}
@@ -288,17 +282,17 @@ export default function GroupInquiryPage() {
       </section>
 
       {/* ── SECTION 4: WHAT'S INCLUDED ── */}
-      <section className="py-20 px-4 bg-[#FAFAFA]">
+      <section className="py-20 px-4 bg-gray-50">
         <div className="max-w-[900px] mx-auto">
           <div className="text-center mb-10">
-            <h2 className="font-display text-3xl font-bold text-[#1A1A1A] mb-2">What's Included</h2>
+            <h2 className="font-display text-3xl font-bold text-brand-black text-center">What's Included</h2>
             <p className="text-gray-500">Every group booking includes these amenities at no extra cost</p>
-            <div className="mx-auto mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-[#F47920] to-[#FDB924]" />
+            <div className="w-10 h-[2px] bg-orange rounded-full mx-auto mt-3 mb-8" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[700px] mx-auto">
             {amenities.map(item => (
               <div key={item} className="flex items-center gap-3">
-                <span className="text-[#F47920] font-bold text-lg flex-shrink-0">✓</span>
+                <span className="text-orange font-bold text-lg flex-shrink-0">✓</span>
                 <span className="text-gray-700 text-sm">{item}</span>
               </div>
             ))}
@@ -310,19 +304,19 @@ export default function GroupInquiryPage() {
       <section id="inquiry-form" className="py-20 px-4 bg-white">
         <div className="max-w-[640px] mx-auto">
           <div className="text-center mb-8">
-            <h2 className="font-display text-3xl font-bold text-[#1A1A1A] mb-2">Request Your Group Rate</h2>
+            <h2 className="font-display text-3xl font-bold text-brand-black text-center">Request Your Group Rate</h2>
             <p className="text-gray-500">Fill out the form below and our team will get back to you within 24 hours.</p>
-            <div className="mx-auto mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-[#F47920] to-[#FDB924]" />
+            <div className="w-10 h-[2px] bg-orange rounded-full mx-auto mt-3 mb-8" />
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg border-t-4 border-t-[#F47920] border border-gray-100 p-8">
+          <div className="bg-white rounded-card shadow-sm border-t-4 border-t-orange border border-gray-100 p-8">
             {submitted ? (
               /* Success state */
               <div className="text-center py-6">
                 <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
                   <span className="text-4xl">✅</span>
                 </div>
-                <h3 className="font-display text-2xl font-bold text-[#1A1A1A] mb-2">
+                <h3 className="font-display text-2xl font-bold text-brand-black mb-2">
                   Thank you, {form.group_name}!
                 </h3>
                 <p className="text-gray-600 mb-4">
@@ -332,14 +326,14 @@ export default function GroupInquiryPage() {
                 </p>
                 <p className="text-gray-500 text-sm">
                   In the meantime, feel free to call us directly at{' '}
-                  <a href="tel:+12077723838" className="text-[#F47920] font-semibold hover:underline">(207) 772-3838</a>
+                  <a href="tel:+12077723838" className="text-orange font-semibold hover:underline">(207) 772-3838</a>
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Group name */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
                     Group / Company Name *
                   </label>
                   <input
@@ -354,7 +348,7 @@ export default function GroupInquiryPage() {
                 {/* Contact name + phone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-1.5">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
                       Contact Name *
                     </label>
                     <input
@@ -366,7 +360,7 @@ export default function GroupInquiryPage() {
                     {errors.contact_name && <p className="text-xs text-red-500 mt-1">{errors.contact_name}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-1.5">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
                       Phone Number *
                     </label>
                     <input
@@ -382,7 +376,7 @@ export default function GroupInquiryPage() {
                 {/* Dates */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-1.5">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
                       Check-in Date *
                     </label>
                     <input
@@ -394,7 +388,7 @@ export default function GroupInquiryPage() {
                     {errors.check_in_date && <p className="text-xs text-red-500 mt-1">{errors.check_in_date}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-1.5">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
                       Check-out Date *
                     </label>
                     <input
@@ -410,7 +404,7 @@ export default function GroupInquiryPage() {
                 {/* Rooms + type */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-1.5">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
                       Number of Rooms *
                     </label>
                     <input
@@ -424,7 +418,7 @@ export default function GroupInquiryPage() {
                     {errors.room_count && <p className="text-xs text-red-500 mt-1">{errors.room_count}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-1.5">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
                       Room Type Preference
                     </label>
                     <select
@@ -442,7 +436,7 @@ export default function GroupInquiryPage() {
 
                 {/* Special notes */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
                     Special Requests or Notes
                   </label>
                   <textarea
@@ -455,7 +449,7 @@ export default function GroupInquiryPage() {
                 </div>
 
                 {submitError && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
+                  <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-card">
                     {submitError}
                   </div>
                 )}
@@ -463,14 +457,14 @@ export default function GroupInquiryPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-4 text-base font-bold text-white rounded-xl bg-gradient-to-r from-[#F47920] to-[#FDB924] hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full py-4 text-base font-bold text-white rounded-xl bg-gradient-to-r from-orange to-yellow-hotel hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {submitting ? 'Sending…' : 'Send Inquiry →'}
                 </button>
 
                 <p className="text-center text-xs text-gray-400">
                   We'll respond within 24 hours. Or call us at{' '}
-                  <a href="tel:+12077723838" className="text-[#F47920] hover:underline">(207) 772-3838</a>
+                  <a href="tel:+12077723838" className="text-orange hover:underline">(207) 772-3838</a>
                 </p>
               </form>
             )}
@@ -479,13 +473,13 @@ export default function GroupInquiryPage() {
       </section>
 
       {/* ── CONTRACT TERMS & POLICY SECTIONS ── */}
-      <section className="py-16 px-4 bg-[#FAFAFA]">
+      <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-[900px] mx-auto">
 
           <div className="text-center mb-10">
-            <h2 className="font-display text-3xl font-bold text-[#1A1A1A] mb-2">Group Contract Policies</h2>
+            <h2 className="font-display text-3xl font-bold text-brand-black text-center">Group Contract Policies</h2>
             <p className="text-gray-500 text-base">Payment, cancellation, terms, and signature information for group bookings</p>
-            <div className="mx-auto mt-4 h-[3px] w-12 rounded-full bg-gradient-to-r from-[#F47920] to-[#FDB924]" />
+            <div className="w-10 h-[2px] bg-orange rounded-full mx-auto mt-3 mb-8" />
           </div>
 
           <div className="space-y-4">
@@ -493,22 +487,20 @@ export default function GroupInquiryPage() {
             {/* ─── CARD 0: METHOD OF PAYMENT ─── */}
             <div
               ref={el => { contractRefs.current[0] = el }}
-              onMouseEnter={() => setContractHovered(prev => { const n = [...prev]; n[0] = true; return n })}
-              onMouseLeave={() => setContractHovered(prev => { const n = [...prev]; n[0] = false; return n })}
               style={contractCardStyle(0)}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(0)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ background: '#FFF5ED' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-orange-light">
                     💳
                   </div>
-                  <h3 className="font-display text-lg font-bold text-[#1A1A1A]">Method of Payment</h3>
+                  <h3 className="font-display text-lg font-bold text-brand-black">Method of Payment</h3>
                 </div>
-                <span style={{ display: 'inline-block', transform: contractOpen[0] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease', color: '#F47920', fontSize: '1.25rem', lineHeight: 1 }}>▾</span>
+                <span className={`inline-block text-orange text-xl leading-none transition-transform duration-300 ${contractOpen[0] ? 'rotate-180' : ''}`}>▾</span>
               </button>
               <div style={{ maxHeight: contractOpen[0] ? '1000px' : '0', overflow: 'hidden', transition: 'max-height 0.35s ease' }}>
                 <div className="px-6 pb-6">
@@ -523,16 +515,17 @@ export default function GroupInquiryPage() {
                     ].map(pm => (
                       <div
                         key={pm.name}
-                        className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-2 text-center cursor-default transition-all duration-150 hover:border-[#F47920] hover:scale-[1.03] hover:shadow-md"
+                        className="bg-white border border-gray-200 rounded-card p-4 flex flex-col items-center gap-2 text-center cursor-default transition-all duration-150 hover:border-orange hover:scale-[1.03] hover:shadow-md"
                       >
                         <span className="text-2xl">{pm.icon}</span>
                         <span className="text-xs font-semibold text-gray-600 leading-tight">{pm.name}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="bg-[#FFF5ED] border border-[#F47920]/20 rounded-xl px-5 py-4">
-                    <p className="text-sm text-[#92400E] leading-relaxed">
-                      <span className="font-bold text-[#F47920]">Note: </span>
+                  <div className="flex items-start gap-3 p-4 rounded-card border-l-4 border-orange bg-orange-50 mt-4">
+                    <span className="text-lg flex-shrink-0">💡</span>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-bold text-orange">Note: </span>
                       A valid credit card is required to be kept on file for the duration of your group's stay.
                     </p>
                   </div>
@@ -543,46 +536,45 @@ export default function GroupInquiryPage() {
             {/* ─── CARD 1: CANCELLATION POLICY ─── */}
             <div
               ref={el => { contractRefs.current[1] = el }}
-              onMouseEnter={() => setContractHovered(prev => { const n = [...prev]; n[1] = true; return n })}
-              onMouseLeave={() => setContractHovered(prev => { const n = [...prev]; n[1] = false; return n })}
               style={contractCardStyle(1)}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(1)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ background: '#FFF0F0' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-red-50">
                     📋
                   </div>
-                  <h3 className="font-display text-lg font-bold text-[#1A1A1A]">Cancellation Policy</h3>
+                  <h3 className="font-display text-lg font-bold text-brand-black">Cancellation Policy</h3>
                 </div>
-                <span style={{ display: 'inline-block', transform: contractOpen[1] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease', color: '#F47920', fontSize: '1.25rem', lineHeight: 1 }}>▾</span>
+                <span className={`inline-block text-orange text-xl leading-none transition-transform duration-300 ${contractOpen[1] ? 'rotate-180' : ''}`}>▾</span>
               </button>
               <div style={{ maxHeight: contractOpen[1] ? '1000px' : '0', overflow: 'hidden', transition: 'max-height 0.35s ease' }}>
                 <div className="px-6 pb-6">
                   <div className="relative pl-10">
-                    <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-[#F47920]/25 rounded-full" />
+                    <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-orange/25 rounded-full" />
                     {[
                       { icon: '📅', title: 'Cutoff Date', text: 'All room reservations must be made by the group cutoff date specified in your contract. Rooms not reserved by the cutoff date will be released back to general inventory.' },
                       { icon: '⏰', title: '48-Hour Notice', text: "Reservations cancelled within 48 hours of the scheduled arrival date will be charged one (1) night's room rate plus applicable taxes." },
                       { icon: '✅', title: 'Early Cancellation', text: 'Cancellations made before the 48-hour window will not be charged. We recommend confirming your final room count as early as possible.' },
                     ].map((step, idx) => (
                       <div key={step.title} className={`relative flex gap-4 ${idx < 2 ? 'mb-7' : ''}`}>
-                        <div className="w-9 h-9 rounded-full bg-white border-2 border-[#F47920]/40 flex items-center justify-center text-base flex-shrink-0 z-10" style={{ marginLeft: '-1.25rem' }}>
+                        <div className="w-9 h-9 rounded-full bg-white border-2 border-orange/40 flex items-center justify-center text-base flex-shrink-0 z-10" style={{ marginLeft: '-1.25rem' }}>
                           {step.icon}
                         </div>
                         <div className="pt-0.5">
-                          <h4 className="font-bold text-[#1A1A1A] text-sm mb-1">{step.title}</h4>
+                          <h4 className="font-bold text-brand-black text-sm mb-1">{step.title}</h4>
                           <p className="text-gray-600 text-sm leading-relaxed">{step.text}</p>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-6 bg-red-50 border border-red-200 rounded-xl px-5 py-4">
-                    <p className="text-sm text-red-700 font-medium leading-relaxed">
-                      ⚠ No-shows will be charged the full first night room rate plus tax.
+                  <div className="flex items-start gap-3 p-4 rounded-card border-l-4 border-red-400 bg-red-50 mt-4">
+                    <span className="text-lg flex-shrink-0">⚠</span>
+                    <p className="text-sm text-gray-700">
+                      No-shows will be charged the full first night room rate plus tax.
                     </p>
                   </div>
                 </div>
@@ -592,22 +584,20 @@ export default function GroupInquiryPage() {
             {/* ─── CARD 2: TERMS & CONDITIONS ─── */}
             <div
               ref={el => { contractRefs.current[2] = el }}
-              onMouseEnter={() => setContractHovered(prev => { const n = [...prev]; n[2] = true; return n })}
-              onMouseLeave={() => setContractHovered(prev => { const n = [...prev]; n[2] = false; return n })}
               style={contractCardStyle(2)}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(2)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ background: '#EFF6FF' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-blue-50">
                     📜
                   </div>
-                  <h3 className="font-display text-lg font-bold text-[#1A1A1A]">Terms & Conditions</h3>
+                  <h3 className="font-display text-lg font-bold text-brand-black">Terms & Conditions</h3>
                 </div>
-                <span style={{ display: 'inline-block', transform: contractOpen[2] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease', color: '#F47920', fontSize: '1.25rem', lineHeight: 1 }}>▾</span>
+                <span className={`inline-block text-orange text-xl leading-none transition-transform duration-300 ${contractOpen[2] ? 'rotate-180' : ''}`}>▾</span>
               </button>
               <div style={{ maxHeight: contractOpen[2] ? '1000px' : '0', overflow: 'hidden', transition: 'max-height 0.35s ease' }}>
                 <div className="pb-2">
@@ -623,12 +613,9 @@ export default function GroupInquiryPage() {
                   ].map((term, idx) => (
                     <div
                       key={idx}
-                      className="flex gap-4 px-6 py-3.5"
-                      style={{ background: idx % 2 === 0 ? '#FAFAFA' : '#FFFFFF', transition: 'background 0.1s ease', cursor: 'default' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(244,121,32,0.06)' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = idx % 2 === 0 ? '#FAFAFA' : '#FFFFFF' }}
+                      className={`flex gap-4 px-6 py-3.5 cursor-default transition-colors duration-100 hover:bg-orange/5 ${idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
                     >
-                      <span className="text-[#F47920] font-bold text-sm flex-shrink-0 mt-0.5 w-5">{idx + 1}.</span>
+                      <span className="text-orange font-bold text-sm flex-shrink-0 mt-0.5 w-5">{idx + 1}.</span>
                       <p className="text-gray-600 text-sm leading-relaxed">{term}</p>
                     </div>
                   ))}
@@ -639,42 +626,41 @@ export default function GroupInquiryPage() {
             {/* ─── CARD 3: DAMAGES & LIABILITY ─── */}
             <div
               ref={el => { contractRefs.current[3] = el }}
-              onMouseEnter={() => setContractHovered(prev => { const n = [...prev]; n[3] = true; return n })}
-              onMouseLeave={() => setContractHovered(prev => { const n = [...prev]; n[3] = false; return n })}
               style={contractCardStyle(3)}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(3)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ background: '#FFFBEB' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-amber-50">
                     ⚠️
                   </div>
-                  <h3 className="font-display text-lg font-bold text-[#1A1A1A]">Damages & Liability</h3>
+                  <h3 className="font-display text-lg font-bold text-brand-black">Damages & Liability</h3>
                 </div>
-                <span style={{ display: 'inline-block', transform: contractOpen[3] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease', color: '#F47920', fontSize: '1.25rem', lineHeight: 1 }}>▾</span>
+                <span className={`inline-block text-orange text-xl leading-none transition-transform duration-300 ${contractOpen[3] ? 'rotate-180' : ''}`}>▾</span>
               </button>
               <div style={{ maxHeight: contractOpen[3] ? '1000px' : '0', overflow: 'hidden', transition: 'max-height 0.35s ease' }}>
                 <div className="px-6 pb-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-5">
+                    <div className="bg-amber-50 border border-amber-100 rounded-card p-5">
                       <h4 className="font-bold text-amber-900 text-xs uppercase tracking-widest mb-3">Group Responsibility</h4>
                       <p className="text-amber-800 text-sm leading-relaxed">
                         The group and its designated contact are jointly responsible for any damage caused to hotel property, furnishings, fixtures, or equipment during the stay. This includes damage caused by any member of the group or their guests.
                       </p>
                     </div>
-                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-5">
+                    <div className="bg-amber-50 border border-amber-100 rounded-card p-5">
                       <h4 className="font-bold text-amber-900 text-xs uppercase tracking-widest mb-3">Billing</h4>
                       <p className="text-amber-800 text-sm leading-relaxed">
                         Any damages will be assessed by hotel management and charged to the credit card on file. The group contact will be notified of any damage charges within 24 hours of checkout.
                       </p>
                     </div>
                   </div>
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
-                    <p className="text-sm text-amber-800 leading-relaxed">
-                      🔒 By submitting a group inquiry and signing a final contract, the authorized representative agrees to accept financial responsibility for any damages incurred during the group's stay at Casco Bay Hotel.
+                  <div className="flex items-start gap-3 p-4 rounded-card border-l-4 border-amber-400 bg-amber-50 mt-4">
+                    <span className="text-lg flex-shrink-0">🔒</span>
+                    <p className="text-sm text-gray-700">
+                      By submitting a group inquiry and signing a final contract, the authorized representative agrees to accept financial responsibility for any damages incurred during the group's stay at Casco Bay Hotel.
                     </p>
                   </div>
                 </div>
@@ -684,22 +670,20 @@ export default function GroupInquiryPage() {
             {/* ─── CARD 4: AGREEMENT & SIGNATURE ─── */}
             <div
               ref={el => { contractRefs.current[4] = el }}
-              onMouseEnter={() => setContractHovered(prev => { const n = [...prev]; n[4] = true; return n })}
-              onMouseLeave={() => setContractHovered(prev => { const n = [...prev]; n[4] = false; return n })}
               style={contractCardStyle(4)}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              className="bg-white rounded-card border border-gray-100 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
               <button
                 onClick={() => toggleContract(4)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ background: '#F0FFF4' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 bg-green-50">
                     ✍️
                   </div>
-                  <h3 className="font-display text-lg font-bold text-[#1A1A1A]">Agreement & Signature</h3>
+                  <h3 className="font-display text-lg font-bold text-brand-black">Agreement & Signature</h3>
                 </div>
-                <span style={{ display: 'inline-block', transform: contractOpen[4] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease', color: '#F47920', fontSize: '1.25rem', lineHeight: 1 }}>▾</span>
+                <span className={`inline-block text-orange text-xl leading-none transition-transform duration-300 ${contractOpen[4] ? 'rotate-180' : ''}`}>▾</span>
               </button>
               <div style={{ maxHeight: contractOpen[4] ? '1000px' : '0', overflow: 'hidden', transition: 'max-height 0.35s ease' }}>
                 <div className="px-6 pb-6">
@@ -714,7 +698,7 @@ export default function GroupInquiryPage() {
                           ['Printed Name', 'Company / Organization'],
                           ['Title / Position', 'Phone Number'],
                         ].map(([left, right], idx) => (
-                          <tr key={left} style={{ background: idx % 2 === 0 ? '#F9FAFB' : '#FFFFFF' }}>
+                          <tr key={left} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                             <td className="border border-gray-200 px-4 py-3.5 font-semibold text-gray-600 w-1/2 text-sm">{left}</td>
                             <td className="border border-gray-200 px-4 py-3.5 font-semibold text-gray-600 w-1/2 text-sm">{right}</td>
                           </tr>
@@ -722,14 +706,15 @@ export default function GroupInquiryPage() {
                       </tbody>
                     </table>
                   </div>
-                  <div className="bg-green-50 border border-green-200 rounded-xl px-5 py-4 mb-4">
-                    <p className="text-sm text-green-800 font-medium leading-relaxed">
-                      ✓ Once signed, a copy of the fully executed contract will be emailed to the group contact for your records.
+                  <div className="flex items-start gap-3 p-4 rounded-card border-l-4 border-green-500 bg-green-50 mt-4 mb-4">
+                    <span className="text-lg flex-shrink-0">✓</span>
+                    <p className="text-sm text-gray-700">
+                      Once signed, a copy of the fully executed contract will be emailed to the group contact for your records.
                     </p>
                   </div>
                   <p className="text-center text-xs text-gray-400">
                     Questions about your contract? Contact us at{' '}
-                    <a href="tel:+12077723838" className="text-[#F47920] hover:underline">(207) 772-3838</a>
+                    <a href="tel:+12077723838" className="text-orange hover:underline">(207) 772-3838</a>
                     {' '}or visit us at 80 John Roberts Rd, South Portland, ME 04106
                   </p>
                 </div>
@@ -741,7 +726,7 @@ export default function GroupInquiryPage() {
       </section>
 
       {/* ── SECTION 6: FOOTER ── */}
-      <footer className="bg-[#1A1A1A] text-white/60 py-8 px-4 text-center">
+      <footer className="bg-brand-black text-white/60 py-8 px-4 text-center">
         <p className="text-sm">
           Casco Bay Hotel · 80 John Roberts Rd, South Portland, ME 04016 ·{' '}
           <a href="tel:+12077723838" className="hover:text-white transition-colors">(207) 772-3838</a>

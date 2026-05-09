@@ -51,10 +51,10 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_BORDER: Record<string, string> = {
   inquiry: 'border-l-blue-400',
-  confirmed: 'border-l-green',
-  checked_in: 'border-l-orange',
+  confirmed: 'border-l-green-500',
+  checked_in: 'border-l-yellow-hotel',
   completed: 'border-l-gray-300',
-  cancelled: 'border-l-red',
+  cancelled: 'border-l-red-400',
 }
 
 function nightsCount(checkIn: string, checkOut: string): number {
@@ -265,7 +265,7 @@ function ContractCard({
                   onBlur={handleNotesBlur}
                   rows={2}
                   placeholder="Internal notes visible only to staff…"
-                  className="w-full border border-gray-200 focus:border-orange focus:ring-1 focus:ring-orange/20 rounded-[10px] px-3 py-2 text-sm outline-none resize-none bg-white"
+                  className="w-full border border-gray-200 focus:border-orange focus:ring-2 focus:ring-orange/10 rounded-[10px] px-3 py-2 text-sm outline-none resize-none bg-white"
                 />
               </div>
 
@@ -480,8 +480,8 @@ function NewContractForm({ onClose }: { onClose: () => void }) {
     cn(
       'w-full border rounded-[10px] px-4 py-2.5 outline-none font-body text-sm transition-colors',
       errors[field]
-        ? 'border-red focus:border-red focus:ring-1 focus:ring-red/20'
-        : 'border-gray-200 focus:border-orange focus:ring-1 focus:ring-orange/20'
+        ? 'border-red focus:border-red focus:ring-2 focus:ring-red/10'
+        : 'border-gray-200 focus:border-orange focus:ring-2 focus:ring-orange/10'
     )
 
   return (
@@ -754,39 +754,75 @@ export default function GroupContractsPage() {
       {/* ── TAB 1: PIPELINE ── */}
       {tab === 'Pipeline' && (
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-base font-semibold">
-              Active Group Bookings
-            </h2>
-            <button
-              onClick={() => setShowNewForm((v) => !v)}
-              className="flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-semibold rounded-[10px] px-4 py-2 text-sm transition-colors"
-            >
-              <Plus size={15} />
-              New Contract
-            </button>
+          {/* KPI stat row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+            <StatCard
+              label="Inquiry"
+              value={stats?.by_status?.inquiry ?? '—'}
+              icon="📋"
+              accentColor="orange"
+              loading={loadingStats}
+            />
+            <StatCard
+              label="Confirmed"
+              value={stats?.by_status?.confirmed ?? '—'}
+              icon="✅"
+              accentColor="green"
+              loading={loadingStats}
+            />
+            <StatCard
+              label="Checked In"
+              value={stats?.by_status?.checked_in ?? '—'}
+              icon="🏨"
+              accentColor="yellow"
+              loading={loadingStats}
+            />
+            <StatCard
+              label="Cutoff Alerts"
+              value={stats?.cutoff_alerts ?? '—'}
+              icon="⚠️"
+              accentColor="red"
+              loading={loadingStats}
+            />
           </div>
 
-          {showNewForm && (
-            <NewContractForm onClose={() => setShowNewForm(false)} />
-          )}
-
-          <div className="flex gap-2 mb-4 flex-wrap">
-            {filterButtons.map((btn) => (
+          <SectionCard className="mb-5">
+            <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+              <h2 className="font-display text-base font-semibold">
+                Active Group Bookings
+              </h2>
               <button
-                key={btn.key}
-                onClick={() => setStatusFilter(btn.key)}
-                className={cn(
-                  'text-xs font-semibold px-3 py-1.5 rounded-full transition-colors',
-                  statusFilter === btn.key
-                    ? 'bg-orange text-white'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                )}
+                onClick={() => setShowNewForm((v) => !v)}
+                className="flex items-center gap-2 bg-orange hover:bg-orange-dark text-white font-semibold rounded-[10px] px-4 py-2 text-sm transition-colors"
               >
-                {btn.label}
+                <Plus size={15} />
+                New Contract
               </button>
-            ))}
-          </div>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {filterButtons.map((btn) => (
+                <button
+                  key={btn.key}
+                  onClick={() => setStatusFilter(btn.key)}
+                  className={cn(
+                    'text-xs font-semibold px-3 py-1.5 rounded-full transition-colors',
+                    statusFilter === btn.key
+                      ? 'bg-orange text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  )}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+
+            {showNewForm && (
+              <div className="mt-4">
+                <NewContractForm onClose={() => setShowNewForm(false)} />
+              </div>
+            )}
+          </SectionCard>
 
           {isLoading ? (
             <LoadingSpinner />
@@ -800,7 +836,7 @@ export default function GroupContractsPage() {
               }
             />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {pipeline.map((contract) => (
                 <ContractCard
                   key={contract.id}
@@ -817,15 +853,17 @@ export default function GroupContractsPage() {
       {/* ── TAB 2: HISTORY ── */}
       {tab === 'History' && (
         <div>
-          <div className="mb-4">
-            <input
-              type="text"
-              value={historySearch}
-              onChange={(e) => setHistorySearch(e.target.value)}
-              placeholder="Search by group name or contact…"
-              className="w-full max-w-sm border border-gray-200 focus:border-orange focus:ring-1 focus:ring-orange/20 rounded-[10px] px-4 py-2.5 text-sm outline-none"
-            />
-          </div>
+          <SectionCard className="mb-5">
+            <div className="relative">
+              <input
+                type="text"
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                placeholder="Search by group name or contact…"
+                className="w-full max-w-sm border border-gray-200 focus:border-orange focus:ring-2 focus:ring-orange/10 rounded-[10px] px-4 py-2.5 text-sm outline-none"
+              />
+            </div>
+          </SectionCard>
 
           {isLoading ? (
             <LoadingSpinner />
