@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, BarChart2, Link, LogOut, BedDouble, Users, Package } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, BarChart2, Link, LogOut, BedDouble, Users, Package, ClipboardCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../hooks/useAuth'
 import { useTodayTasks } from '../../hooks/useTasks'
@@ -7,6 +7,7 @@ import { useTodayOrders } from '../../hooks/useOrders'
 import { useHousekeepingProgress } from '../../hooks/useHousekeeping'
 import { useGroupStats } from '../../hooks/useGroups'
 import { useInventoryAlerts } from '../../hooks/useInventory'
+import { useOpenIssues } from '../../hooks/useInspections'
 import { getToday, cn } from '../../lib/utils'
 
 interface SidebarProps {
@@ -21,11 +22,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const { data: hkProgress } = useHousekeepingProgress(getToday())
   const { data: groupStats } = useGroupStats()
   const { data: invAlerts } = useInventoryAlerts()
+  const { data: urgentIssuesData } = useOpenIssues({ severity: 'urgent' })
 
   const pendingOrders = todayOrders?.pending ?? 0
   const pendingRooms = hkProgress?.total_pending ?? 0
   const cutoffAlerts = groupStats?.cutoff_alerts ?? 0
   const invCritical = invAlerts?.critical_count ?? 0
+  const urgentIssues = urgentIssuesData?.urgent ?? 0
   const tasksIncomplete =
     new Date().getHours() >= 17 && (todayTasks?.completed_count ?? 6) < 6
 
@@ -136,6 +139,20 @@ export default function Sidebar({ onClose }: SidebarProps) {
           )}
         </NavLink>
 
+        <NavLink
+          to="/admin/inspections"
+          onClick={onClose}
+          className={({ isActive }) => cn(base, isActive ? active : inactive)}
+        >
+          <ClipboardCheck size={16} />
+          Inspections
+          {urgentIssues > 0 && (
+            <span className="ml-auto text-[10px] font-bold bg-red text-white px-1.5 py-0.5 rounded-full">
+              {urgentIssues}
+            </span>
+          )}
+        </NavLink>
+
         <p className="px-5 text-[10px] uppercase tracking-widest text-white/30 font-semibold mt-5 mb-2">Insights</p>
 
         <NavLink
@@ -187,6 +204,14 @@ export default function Sidebar({ onClose }: SidebarProps) {
         >
           <Link size={16} />
           Copy Stock Check Link
+        </button>
+
+        <button
+          onClick={() => copyLink('/inspection')}
+          className={cn(base, inactive, 'w-full text-left')}
+        >
+          <Link size={16} />
+          Copy Inspection Link
         </button>
       </nav>
 

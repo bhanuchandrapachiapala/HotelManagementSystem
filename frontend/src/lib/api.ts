@@ -26,6 +26,19 @@ import type {
   InventoryAlerts,
   InventorySummary,
   BulkUpdateEntry,
+  Inspector,
+  Inspection,
+  InspectionIssue,
+  OpenIssuesResponse,
+  InspectionLogResponse,
+  RoomStatusResponse,
+  AnalyticsResponse,
+  StartInspectionRequest,
+  UpdateInspectionRequest as InspectionUpdateRequest,
+  SubmitInspectionRequest,
+  CreateIssueRequest,
+  UpdateIssueStatusRequest,
+  PhotoUploadUrlResponse,
 } from '../types'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:8000'
@@ -294,6 +307,127 @@ export function updateInventoryItem(
 ): Promise<{ message: string; item: InventoryItem }> {
   return apiFetch(`/api/inventory/items/${itemId}`, {
     method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+// Inspections
+export function getInspectors(): Promise<{ inspectors: Inspector[] }> {
+  return apiFetch('/api/inspections/inspectors')
+}
+
+export function addInspector(name: string): Promise<{ message: string; inspector: Inspector }> {
+  return apiFetch('/api/inspections/inspectors', {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  })
+}
+
+export function deleteInspector(id: number): Promise<{ message: string; inspector: Inspector }> {
+  return apiFetch(`/api/inspections/inspectors/${id}`, { method: 'DELETE' })
+}
+
+export function startInspection(
+  data: StartInspectionRequest,
+): Promise<{ message: string; inspection: Inspection }> {
+  return apiFetch('/api/inspections/start', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function updateInspection(
+  inspectionId: number,
+  data: InspectionUpdateRequest,
+): Promise<{ message: string; inspection: Inspection }> {
+  return apiFetch(`/api/inspections/${inspectionId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export function submitInspection(
+  inspectionId: number,
+  data: SubmitInspectionRequest,
+): Promise<{ message: string; inspection: Inspection; duration_minutes?: number; issues_count: number }> {
+  return apiFetch(`/api/inspections/${inspectionId}/submit`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function addInspectionIssue(
+  inspectionId: number,
+  data: CreateIssueRequest,
+): Promise<{ message: string; issue: InspectionIssue }> {
+  return apiFetch(`/api/inspections/${inspectionId}/issues`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function updateIssueStatus(
+  issueId: number,
+  data: UpdateIssueStatusRequest,
+): Promise<{ message: string; issue: InspectionIssue }> {
+  return apiFetch(`/api/inspections/issues/${issueId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export function getOpenIssues(filters?: {
+  severity?: string
+  room_number?: string
+  category?: string
+}): Promise<OpenIssuesResponse> {
+  const params = new URLSearchParams()
+  if (filters?.severity) params.set('severity', filters.severity)
+  if (filters?.room_number) params.set('room_number', filters.room_number)
+  if (filters?.category) params.set('category', filters.category)
+  const qs = params.toString() ? `?${params.toString()}` : ''
+  return apiFetch(`/api/inspections/issues/open${qs}`)
+}
+
+export function getInspectionLog(filters?: {
+  limit?: number
+  offset?: number
+  room_number?: string
+  inspector_id?: number
+  date_from?: string
+  date_to?: string
+}): Promise<InspectionLogResponse> {
+  const params = new URLSearchParams()
+  if (filters?.limit !== undefined) params.set('limit', String(filters.limit))
+  if (filters?.offset !== undefined) params.set('offset', String(filters.offset))
+  if (filters?.room_number) params.set('room_number', filters.room_number)
+  if (filters?.inspector_id !== undefined) params.set('inspector_id', String(filters.inspector_id))
+  if (filters?.date_from) params.set('date_from', filters.date_from)
+  if (filters?.date_to) params.set('date_to', filters.date_to)
+  const qs = params.toString() ? `?${params.toString()}` : ''
+  return apiFetch(`/api/inspections/log${qs}`)
+}
+
+export function getInspection(id: number): Promise<{ inspection: Inspection }> {
+  return apiFetch(`/api/inspections/${id}`)
+}
+
+export function getRoomInspectionStatus(): Promise<RoomStatusResponse> {
+  return apiFetch('/api/inspections/room-status')
+}
+
+export function getInspectionAnalytics(days = 30): Promise<AnalyticsResponse> {
+  return apiFetch(`/api/inspections/analytics?days=${days}`)
+}
+
+export function getPhotoUploadUrl(data: {
+  inspection_id: number
+  issue_id?: number
+  photo_type: 'before' | 'after'
+  file_extension?: string
+}): Promise<PhotoUploadUrlResponse> {
+  return apiFetch('/api/inspections/photos/upload-url', {
+    method: 'POST',
     body: JSON.stringify(data),
   })
 }

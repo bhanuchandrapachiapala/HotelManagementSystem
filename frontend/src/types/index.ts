@@ -361,3 +361,170 @@ export interface BulkUpdateEntry {
   change_type?: string
   notes?: string
 }
+
+// ── Inspections ───────────────────────────────────────────────────────────────
+
+export interface Inspector {
+  id: number
+  name: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface Inspection {
+  id: number
+  room_number: string
+  floor: number
+  inspector_id: number
+  inspector_name?: string
+  inspection_type: string
+  overall_cleanliness?: number
+  overall_condition?: string
+  quick_checks: Record<string, boolean>
+  general_notes?: string
+  started_at: string
+  submitted_at?: string
+  duration_minutes?: number
+  status: 'in_progress' | 'submitted' | 'voided'
+  issues?: InspectionIssue[]
+  issues_count?: number
+  open_issues_count?: number
+  created_at: string
+}
+
+export interface InspectionIssue {
+  id: number
+  inspection_id: number
+  room_number: string
+  category: string
+  severity: 'urgent' | 'standard' | 'minor' | 'note'
+  location_in_room?: string
+  description: string
+  status: 'open' | 'in_progress' | 'resolved' | 'closed'
+  resolved_by?: string
+  resolution_notes?: string
+  before_photo_url?: string
+  after_photo_url?: string
+  created_at: string
+  work_started_at?: string
+  resolved_at?: string
+  closed_at?: string
+  updated_at: string
+  time_open_hours?: number
+  sla_status?: 'within_sla' | 'at_risk' | 'breached' | 'no_sla'
+}
+
+export interface RoomInspectionStatus {
+  room_number: string
+  floor: number
+  last_inspection_date?: string | null
+  last_inspection_type?: string | null
+  overall_condition?: string | null
+  open_issues: number
+  urgent_issues: number
+  status: 'never_inspected' | 'clear' | 'minor_issues' | 'standard_issues' | 'urgent'
+}
+
+export interface OpenIssuesResponse {
+  total: number
+  urgent: number
+  standard: number
+  minor: number
+  note: number
+  issues: InspectionIssue[]
+}
+
+export interface InspectionLogResponse {
+  total: number
+  inspections: Inspection[]
+}
+
+export interface RoomStatusResponse {
+  rooms: Record<string, RoomInspectionStatus>
+}
+
+export interface AnalyticsResponse {
+  period_days: number
+  total_inspections: number
+  total_issues: number
+  open_issues: number
+  urgent_open: number
+  avg_inspection_duration_minutes: number | null
+  avg_resolution_hours_by_severity: Record<string, number | null>
+  issues_by_category: Array<{
+    category: string
+    label: string
+    emoji: string
+    count: number
+    percentage: number
+  }>
+  issues_by_severity: Array<{
+    severity: string
+    count: number
+    resolved: number
+    sla_met: number
+  }>
+  most_problematic_rooms: Array<{
+    room_number: string
+    floor: number
+    total_issues: number
+    open_issues: number
+    inspection_count: number
+    avg_issues_per_inspection: number
+  }>
+  inspector_stats: Array<{
+    inspector_id: number
+    inspector_name: string
+    total_inspections: number
+    avg_duration_minutes: number | null
+    total_issues_found: number
+    avg_issues_per_inspection: number
+  }>
+  sla_compliance: Record<string, { total: number; within_sla: number; compliance_rate: number }>
+  monthly_trend: Array<{ month: string; inspections: number; issues: number }>
+}
+
+export interface StartInspectionRequest {
+  room_number: string
+  inspector_id: number
+  inspection_type: string
+}
+
+export interface UpdateInspectionRequest {
+  overall_cleanliness?: number
+  overall_condition?: string
+  quick_checks?: Record<string, boolean>
+  general_notes?: string
+}
+
+export interface SubmitInspectionRequest {
+  overall_cleanliness: number
+  overall_condition: string
+  quick_checks: Record<string, boolean>
+  general_notes?: string
+}
+
+export interface CreateIssueRequest {
+  inspection_id: number
+  room_number: string
+  category: string
+  severity: string
+  location_in_room?: string
+  description: string
+  before_photo_url?: string
+}
+
+export interface UpdateIssueStatusRequest {
+  status: string
+  resolved_by?: string
+  resolution_notes?: string
+  after_photo_url?: string
+}
+
+export interface PhotoUploadUrlResponse {
+  upload_url: string | null
+  token?: string | null
+  public_url: string | null
+  path: string
+  bucket: string
+}
