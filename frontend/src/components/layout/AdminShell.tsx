@@ -6,6 +6,7 @@ import Topbar from './Topbar'
 const PAGE_TITLES: Record<string, string> = {
   '/admin':               'Dashboard',
   '/admin/business':      'Business Case',
+  '/admin/frontdesk':     'Front Desk Checklist',
   '/admin/dinner':        'Dinner Menu',
   '/admin/reports':       'Reports',
   '/admin/housekeeping':  'Housekeeping',

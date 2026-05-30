@@ -10,6 +10,7 @@ from routers.housekeeping import router as housekeeping_router
 from routers.group_contracts import router as groups_router
 from routers.inventory import router as inventory_router
 from routers.inspections import router as inspections_router
+from routers.front_desk import router as front_desk_router
 
 app = FastAPI(title="CascoBay HMS API")
 
@@ -33,6 +34,7 @@ app.include_router(housekeeping_router, prefix="/api/housekeeping")
 app.include_router(groups_router, prefix="/api/groups")
 app.include_router(inventory_router, prefix="/api/inventory")
 app.include_router(inspections_router, prefix="/api/inspections")
+app.include_router(front_desk_router, prefix="/api/frontdesk")
 
 
 @app.get("/")

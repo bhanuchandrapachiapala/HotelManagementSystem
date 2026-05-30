@@ -91,6 +91,34 @@ export function submitChecklist(date: string, taskIds: string[]): Promise<Submit
   })
 }
 
+// Front Desk Checklist
+export function getFrontDeskToday(): Promise<TaskSummary> {
+  return apiFetch('/api/frontdesk/today')
+}
+
+export function getFrontDeskForDate(date: string): Promise<TaskSummary> {
+  return apiFetch(`/api/frontdesk/date/${date}`)
+}
+
+export function getFrontDeskRange(startDate: string, endDate: string): Promise<TaskRangeResponse> {
+  return apiFetch(`/api/frontdesk/range?start_date=${startDate}&end_date=${endDate}`)
+}
+
+export function getFrontDeskAnalysis(month: string): Promise<TaskAnalysisResponse> {
+  return apiFetch(`/api/frontdesk/analysis?month=${month}`)
+}
+
+export function getFrontDeskHistory(days = 7): Promise<TaskHistoryResponse> {
+  return apiFetch(`/api/frontdesk/history?days=${days}`)
+}
+
+export function submitFrontDeskChecklist(date: string, taskIds: string[]): Promise<SubmitResponse> {
+  return apiFetch('/api/frontdesk/submit', {
+    method: 'POST',
+    body: JSON.stringify({ date, task_ids: taskIds }),
+  })
+}
+
 // Orders
 export function getTodayOrders(status?: string): Promise<OrderSummaryResponse> {
   const qs = status ? `?status=${status}` : ''
