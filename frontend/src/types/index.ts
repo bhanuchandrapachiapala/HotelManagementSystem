@@ -528,3 +528,100 @@ export interface PhotoUploadUrlResponse {
   path: string
   bucket: string
 }
+
+// ── Time Clock ──
+export type Department =
+  | 'front_desk'
+  | 'housekeeping'
+  | 'maintenance'
+  | 'kitchen'
+  | 'management'
+  | 'other'
+
+export interface TimeClockEmployee {
+  id: number
+  name: string
+  department: Department
+  is_active: boolean
+  is_clocked_in: boolean
+  current_entry_id: number | null
+  clocked_in_at: string | null
+  hours_today: number
+}
+
+export type TimeEntryStatus = 'active' | 'completed' | 'incomplete'
+
+export interface TimeClockEntry {
+  id: number
+  employee_id: number
+  employee_name: string | null
+  department: Department | null
+  clock_in_at: string
+  clock_out_at: string | null
+  total_minutes: number | null
+  total_hours: number | null
+  status: TimeEntryStatus
+  notes: string | null
+  edited_by: string | null
+  created_at: string
+}
+
+export interface TodayRosterResponse {
+  date: string
+  currently_in: number
+  total_today: number
+  entries: TimeClockEntry[]
+}
+
+export interface TimeEntriesResponse {
+  entries: TimeClockEntry[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export interface AnalyticsEmployeeDay {
+  date: string
+  hours: number
+  status: TimeEntryStatus
+}
+
+export interface AnalyticsByEmployee {
+  employee_id: number
+  employee_name: string
+  department: Department
+  days_worked: number
+  total_hours: number
+  avg_hours_per_day: number
+  overtime_days: number
+  entries: AnalyticsEmployeeDay[]
+}
+
+export interface AnalyticsByDepartment {
+  department: Department
+  department_label: string
+  total_hours: number
+  employee_count: number
+}
+
+export interface AnalyticsDailyTotal {
+  date: string
+  label: string
+  total_hours: number
+  employee_count: number
+}
+
+export interface AnalyticsOvertimeAlert {
+  employee_name: string
+  period: string
+  total_hours: number
+  overtime_hours: number
+}
+
+export interface TimeClockAnalytics {
+  period_days: number
+  by_employee: AnalyticsByEmployee[]
+  by_department: AnalyticsByDepartment[]
+  daily_totals: AnalyticsDailyTotal[]
+  overtime_alerts: AnalyticsOvertimeAlert[]
+}

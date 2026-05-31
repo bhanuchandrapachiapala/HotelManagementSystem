@@ -1,9 +1,10 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, BarChart2, Link, LogOut, BedDouble, Users, Package, ClipboardCheck } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, BarChart2, Link, LogOut, BedDouble, Users, Package, ClipboardCheck, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../hooks/useAuth'
 import { useTodayTasks } from '../../hooks/useTasks'
 import { useTodayFrontDesk } from '../../hooks/useFrontDesk'
+import { useTimeClockEmployees } from '../../hooks/useTimeClock'
 import { useTodayOrders } from '../../hooks/useOrders'
 import { useHousekeepingProgress } from '../../hooks/useHousekeeping'
 import { useGroupStats } from '../../hooks/useGroups'
@@ -20,6 +21,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const navigate = useNavigate()
   const { data: todayTasks } = useTodayTasks()
   const { data: todayFrontDesk } = useTodayFrontDesk()
+  const { data: timeClockData } = useTimeClockEmployees()
   const { data: todayOrders } = useTodayOrders()
   const { data: hkProgress } = useHousekeepingProgress(getToday())
   const { data: groupStats } = useGroupStats()
@@ -35,6 +37,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
     new Date().getHours() >= 17 && (todayTasks?.completed_count ?? 6) < 6
   const frontDeskIncomplete =
     new Date().getHours() >= 17 && (todayFrontDesk?.completed_count ?? 22) < 22
+  const clockedInCount = timeClockData?.employees.filter((e) => e.is_clocked_in).length ?? 0
 
   const base = 'flex items-center gap-3 px-4 py-2.5 text-sm font-semibold border-l-[3px] transition-colors'
   const active = 'border-orange bg-orange/10 text-orange'
@@ -96,6 +99,20 @@ export default function Sidebar({ onClose }: SidebarProps) {
           Front Desk
           {frontDeskIncomplete && (
             <span className="ml-auto text-[10px] font-bold bg-orange text-white px-1.5 py-0.5 rounded-full">!</span>
+          )}
+        </NavLink>
+
+        <NavLink
+          to="/admin/timeclock"
+          onClick={onClose}
+          className={({ isActive }) => cn(base, isActive ? active : inactive)}
+        >
+          <Clock size={16} />
+          Time Clock
+          {clockedInCount > 0 && (
+            <span className="ml-auto text-[10px] font-bold bg-green text-white px-1.5 py-0.5 rounded-full">
+              {clockedInCount}
+            </span>
           )}
         </NavLink>
 

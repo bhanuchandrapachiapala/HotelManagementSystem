@@ -5,6 +5,7 @@ import LoginPage from './pages/admin/LoginPage'
 import HomePage from './pages/admin/HomePage'
 import BusinessCasePage from './pages/admin/BusinessCasePage'
 import FrontDeskPage from './pages/admin/FrontDeskPage'
+import TimeClockPage from './pages/admin/TimeClockPage'
 import DinnerAdminPage from './pages/admin/DinnerAdminPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import HousekeepingPage from './pages/admin/HousekeepingPage'
@@ -36,6 +37,7 @@ export default function App() {
         <Route index element={<HomePage />} />
         <Route path="business" element={<BusinessCasePage />} />
         <Route path="frontdesk" element={<FrontDeskPage />} />
+        <Route path="timeclock" element={<TimeClockPage />} />
         <Route path="dinner" element={<DinnerAdminPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="housekeeping" element={<HousekeepingPage />} />

@@ -39,6 +39,12 @@ import type {
   CreateIssueRequest,
   UpdateIssueStatusRequest,
   PhotoUploadUrlResponse,
+  TimeClockEmployee,
+  TimeClockEntry,
+  TodayRosterResponse,
+  TimeEntriesResponse,
+  TimeClockAnalytics,
+  Department,
 } from '../types'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:8000'
@@ -116,6 +122,77 @@ export function submitFrontDeskChecklist(date: string, taskIds: string[]): Promi
   return apiFetch('/api/frontdesk/submit', {
     method: 'POST',
     body: JSON.stringify({ date, task_ids: taskIds }),
+  })
+}
+
+// Time Clock
+export function getTimeClockEmployees(
+  includeInactive = false,
+): Promise<{ employees: TimeClockEmployee[] }> {
+  const qs = includeInactive ? '?include_inactive=true' : ''
+  return apiFetch(`/api/timeclock/employees${qs}`)
+}
+
+export function clockAction(
+  employeeId: number,
+): Promise<{ action: 'clocked_in' | 'clocked_out'; entry: TimeClockEntry; total_hours?: number }> {
+  return apiFetch('/api/timeclock/clock', {
+    method: 'POST',
+    body: JSON.stringify({ employee_id: employeeId }),
+  })
+}
+
+export function getTodayRoster(): Promise<TodayRosterResponse> {
+  return apiFetch('/api/timeclock/today')
+}
+
+export function getTimeEntries(filters?: {
+  employee_id?: number
+  date_from?: string
+  date_to?: string
+  department?: string
+  limit?: number
+  offset?: number
+}): Promise<TimeEntriesResponse> {
+  const params = new URLSearchParams()
+  if (filters?.employee_id !== undefined) params.set('employee_id', String(filters.employee_id))
+  if (filters?.date_from) params.set('date_from', filters.date_from)
+  if (filters?.date_to) params.set('date_to', filters.date_to)
+  if (filters?.department) params.set('department', filters.department)
+  if (filters?.limit !== undefined) params.set('limit', String(filters.limit))
+  if (filters?.offset !== undefined) params.set('offset', String(filters.offset))
+  const qs = params.toString() ? `?${params.toString()}` : ''
+  return apiFetch(`/api/timeclock/entries${qs}`)
+}
+
+export function editTimeEntry(
+  entryId: number,
+  data: { clock_in_at?: string; clock_out_at?: string; notes?: string; edited_by: string },
+): Promise<{ message: string; entry: TimeClockEntry }> {
+  return apiFetch(`/api/timeclock/entries/${entryId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export function getTimeClockAnalytics(days = 7): Promise<TimeClockAnalytics> {
+  return apiFetch(`/api/timeclock/analytics?days=${days}`)
+}
+
+export function addTimeClockEmployee(data: {
+  name: string
+  department: Department
+}): Promise<{ message: string; employee: TimeClockEmployee }> {
+  return apiFetch('/api/timeclock/employees', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export function updateTimeClockEmployee(
+  id: number,
+  data: { name?: string; department?: Department; is_active?: boolean },
+): Promise<{ message: string; employee: TimeClockEmployee }> {
+  return apiFetch(`/api/timeclock/employees/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   })
 }
 
