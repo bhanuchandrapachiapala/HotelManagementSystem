@@ -44,7 +44,9 @@ import type {
   TodayRosterResponse,
   TimeEntriesResponse,
   TimeClockAnalytics,
-  Department,
+  SchedulesResponse,
+  ScheduleOverride,
+  CreateOverrideRequest,
 } from '../types'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:8000'
@@ -126,16 +128,18 @@ export function submitFrontDeskChecklist(date: string, taskIds: string[]): Promi
 }
 
 // Time Clock
-export function getTimeClockEmployees(
-  includeInactive = false,
-): Promise<{ employees: TimeClockEmployee[] }> {
-  const qs = includeInactive ? '?include_inactive=true' : ''
-  return apiFetch(`/api/timeclock/employees${qs}`)
+export function getTimeClockEmployees(): Promise<{ employees: TimeClockEmployee[] }> {
+  return apiFetch('/api/timeclock/employees')
 }
 
-export function clockAction(
-  employeeId: number,
-): Promise<{ action: 'clocked_in' | 'clocked_out'; entry: TimeClockEntry; total_hours?: number }> {
+export function clockAction(employeeId: number): Promise<{
+  action: 'clocked_in' | 'clocked_out'
+  entry: TimeClockEntry
+  schedule?: { shift_start: string; shift_end: string }
+  clock_in_status?: string
+  total_hours?: number
+  is_night_shift?: boolean
+}> {
   return apiFetch('/api/timeclock/clock', {
     method: 'POST',
     body: JSON.stringify({ employee_id: employeeId }),
@@ -150,7 +154,6 @@ export function getTimeEntries(filters?: {
   employee_id?: number
   date_from?: string
   date_to?: string
-  department?: string
   limit?: number
   offset?: number
 }): Promise<TimeEntriesResponse> {
@@ -158,7 +161,6 @@ export function getTimeEntries(filters?: {
   if (filters?.employee_id !== undefined) params.set('employee_id', String(filters.employee_id))
   if (filters?.date_from) params.set('date_from', filters.date_from)
   if (filters?.date_to) params.set('date_to', filters.date_to)
-  if (filters?.department) params.set('department', filters.department)
   if (filters?.limit !== undefined) params.set('limit', String(filters.limit))
   if (filters?.offset !== undefined) params.set('offset', String(filters.offset))
   const qs = params.toString() ? `?${params.toString()}` : ''
@@ -175,20 +177,53 @@ export function editTimeEntry(
   })
 }
 
-export function getTimeClockAnalytics(days = 7): Promise<TimeClockAnalytics> {
-  return apiFetch(`/api/timeclock/analytics?days=${days}`)
+export function getTimeClockAnalytics(dateFrom?: string, dateTo?: string): Promise<TimeClockAnalytics> {
+  const params = new URLSearchParams()
+  if (dateFrom) params.set('date_from', dateFrom)
+  if (dateTo) params.set('date_to', dateTo)
+  const qs = params.toString() ? `?${params.toString()}` : ''
+  return apiFetch(`/api/timeclock/analytics${qs}`)
+}
+
+export function getEmployeeSchedules(): Promise<SchedulesResponse> {
+  return apiFetch('/api/timeclock/schedules')
+}
+
+export function updateEmployeeSchedule(
+  employeeId: number,
+  data: { shift_start: string; shift_end: string; buffer_minutes: number },
+): Promise<{ message: string; employee: TimeClockEmployee }> {
+  return apiFetch(`/api/timeclock/employees/${employeeId}/schedule`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export function createScheduleOverride(
+  data: CreateOverrideRequest,
+): Promise<{ message: string; override: ScheduleOverride }> {
+  return apiFetch('/api/timeclock/schedules/override', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function deleteScheduleOverride(overrideId: number): Promise<{ message: string }> {
+  return apiFetch(`/api/timeclock/schedules/override/${overrideId}`, { method: 'DELETE' })
 }
 
 export function addTimeClockEmployee(data: {
   name: string
-  department: Department
+  shift_start: string
+  shift_end: string
+  buffer_minutes: number
 }): Promise<{ message: string; employee: TimeClockEmployee }> {
   return apiFetch('/api/timeclock/employees', { method: 'POST', body: JSON.stringify(data) })
 }
 
 export function updateTimeClockEmployee(
   id: number,
-  data: { name?: string; department?: Department; is_active?: boolean },
+  data: { name?: string; is_active?: boolean },
 ): Promise<{ message: string; employee: TimeClockEmployee }> {
   return apiFetch(`/api/timeclock/employees/${id}`, {
     method: 'PATCH',

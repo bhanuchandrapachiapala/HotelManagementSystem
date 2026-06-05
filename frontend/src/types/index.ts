@@ -529,48 +529,92 @@ export interface PhotoUploadUrlResponse {
   bucket: string
 }
 
-// ── Time Clock ──
-export type Department =
-  | 'front_desk'
-  | 'housekeeping'
-  | 'maintenance'
-  | 'kitchen'
-  | 'management'
-  | 'other'
+// ── Time Clock (v2 — schedules, pay week, night shifts) ──
+export type ClockStatus = 'early' | 'on_time' | 'late' | 'manual' | 'pending'
 
 export interface TimeClockEmployee {
   id: number
   name: string
-  department: Department
   is_active: boolean
+  created_at: string
+  shift_start?: string         // "09:00"
+  shift_end?: string           // "16:00"
+  buffer_minutes?: number
   is_clocked_in: boolean
-  current_entry_id: number | null
-  clocked_in_at: string | null
+  current_entry_id?: number
+  clocked_in_at?: string
   hours_today: number
+  clock_in_status?: string
 }
 
-export type TimeEntryStatus = 'active' | 'completed' | 'incomplete'
+export interface EmployeeSchedule {
+  employee_id: number
+  shift_start: string
+  shift_end: string
+  buffer_minutes: number
+}
+
+export interface ScheduleOverride {
+  id: number
+  employee_id?: number
+  override_date: string
+  shift_start: string
+  shift_end: string
+  buffer_minutes: number
+  override_for_all: boolean
+  note?: string
+  created_at: string
+}
 
 export interface TimeClockEntry {
   id: number
   employee_id: number
-  employee_name: string | null
-  department: Department | null
+  employee_name?: string
+  shift_date: string
   clock_in_at: string
-  clock_out_at: string | null
-  total_minutes: number | null
-  total_hours: number | null
-  status: TimeEntryStatus
-  notes: string | null
-  edited_by: string | null
+  clock_out_at?: string
+  total_minutes?: number
+  total_hours?: number
+  clock_in_status: string
+  clock_out_status: string
+  notes?: string
+  edited_by?: string
   created_at: string
+  is_night_shift?: boolean
 }
 
-export interface TodayRosterResponse {
-  date: string
-  currently_in: number
-  total_today: number
-  entries: TimeClockEntry[]
+export interface TimeClockAnalytics {
+  date_from: string
+  date_to: string
+  by_employee: Array<{
+    employee_id: number
+    employee_name: string
+    days_worked: number
+    total_hours: number
+    avg_hours_per_day: number
+    overtime_days: number
+    pay_week_hours: number
+    entries_by_date: Array<{ date: string; hours: number; clock_in_status: string; clock_out_status: string }>
+  }>
+  daily_totals: Array<{ date: string; label: string; total_hours: number; employee_count: number }>
+  overtime_alerts: Array<{ employee_name: string; type: string; hours: number; overtime_hours: number }>
+  pay_week_start: string
+  pay_week_end: string
+}
+
+// ── Time Clock response/request envelopes ──
+export interface ScheduleRow {
+  employee_id: number
+  name: string
+  shift_start: string
+  shift_end: string
+  buffer_minutes: number
+  today_override: ScheduleOverride | null
+}
+
+export interface SchedulesResponse {
+  schedules: ScheduleRow[]
+  overrides: ScheduleOverride[]
 }
 
 export interface TimeEntriesResponse {
@@ -580,48 +624,29 @@ export interface TimeEntriesResponse {
   offset: number
 }
 
-export interface AnalyticsEmployeeDay {
+export interface TodayRosterEmployee {
+  id: number
+  name: string
+  is_clocked_in: boolean
+  current_entry_id: number | null
+  clocked_in_at: string | null
+  hours_today: number
+  entries: TimeClockEntry[]
+}
+
+export interface TodayRosterResponse {
   date: string
-  hours: number
-  status: TimeEntryStatus
+  currently_in: number
+  total_entries_today: number
+  employees: TodayRosterEmployee[]
 }
 
-export interface AnalyticsByEmployee {
-  employee_id: number
-  employee_name: string
-  department: Department
-  days_worked: number
-  total_hours: number
-  avg_hours_per_day: number
-  overtime_days: number
-  entries: AnalyticsEmployeeDay[]
-}
-
-export interface AnalyticsByDepartment {
-  department: Department
-  department_label: string
-  total_hours: number
-  employee_count: number
-}
-
-export interface AnalyticsDailyTotal {
-  date: string
-  label: string
-  total_hours: number
-  employee_count: number
-}
-
-export interface AnalyticsOvertimeAlert {
-  employee_name: string
-  period: string
-  total_hours: number
-  overtime_hours: number
-}
-
-export interface TimeClockAnalytics {
-  period_days: number
-  by_employee: AnalyticsByEmployee[]
-  by_department: AnalyticsByDepartment[]
-  daily_totals: AnalyticsDailyTotal[]
-  overtime_alerts: AnalyticsOvertimeAlert[]
+export interface CreateOverrideRequest {
+  employee_id?: number | null
+  override_date: string
+  shift_start: string
+  shift_end: string
+  buffer_minutes: number
+  override_for_all: boolean
+  note?: string
 }

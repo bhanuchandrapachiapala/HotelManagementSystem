@@ -1,88 +1,80 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime
-
-
-VALID_DEPARTMENTS = [
-    'front_desk', 'housekeeping', 'maintenance', 'kitchen', 'management', 'other'
-]
-
-DEPARTMENT_LABELS = {
-    'front_desk': 'Front Desk',
-    'housekeeping': 'Housekeeping',
-    'maintenance': 'Maintenance',
-    'kitchen': 'Kitchen',
-    'management': 'Management',
-    'other': 'Other',
-}
+from datetime import datetime, date, timedelta
 
 
 class TimeClockEmployee(BaseModel):
     id: int
     name: str
-    department: str
     is_active: bool
     created_at: datetime
+    # joined fields
+    shift_start: Optional[str] = None       # "09:00"
+    shift_end: Optional[str] = None         # "16:00"
+    buffer_minutes: Optional[int] = 30
+    is_clocked_in: Optional[bool] = False
+    current_entry_id: Optional[int] = None
+    clocked_in_at: Optional[datetime] = None
+    hours_today: Optional[float] = 0.0
+    clock_in_status: Optional[str] = None
 
 
 class CreateEmployeeRequest(BaseModel):
-    name: str
-    department: str
-
-    @field_validator('name')
-    @classmethod
-    def name_length(cls, v: str) -> str:
-        v = v.strip()
-        if not (2 <= len(v) <= 50):
-            raise ValueError('name must be between 2 and 50 characters')
-        return v
-
-    @field_validator('department')
-    @classmethod
-    def department_valid(cls, v: str) -> str:
-        if v not in VALID_DEPARTMENTS:
-            raise ValueError(f'Invalid department: {v}')
-        return v
+    name: str  # 2-50 chars, strip whitespace
+    shift_start: str = "09:00"   # HH:MM format
+    shift_end: str = "16:00"     # HH:MM format
+    buffer_minutes: int = 30
 
 
 class UpdateEmployeeRequest(BaseModel):
     name: Optional[str] = None
-    department: Optional[str] = None
     is_active: Optional[bool] = None
 
-    @field_validator('name')
-    @classmethod
-    def name_length(cls, v: Optional[str]) -> Optional[str]:
-        if v is None:
-            return v
-        v = v.strip()
-        if not (2 <= len(v) <= 50):
-            raise ValueError('name must be between 2 and 50 characters')
-        return v
 
-    @field_validator('department')
-    @classmethod
-    def department_valid(cls, v: Optional[str]) -> Optional[str]:
-        if v is None:
-            return v
-        if v not in VALID_DEPARTMENTS:
-            raise ValueError(f'Invalid department: {v}')
-        return v
+class UpdateScheduleRequest(BaseModel):
+    shift_start: str         # HH:MM format
+    shift_end: str           # HH:MM format
+    buffer_minutes: int = 30
+
+
+class ScheduleOverride(BaseModel):
+    id: int
+    employee_id: Optional[int]
+    override_date: str
+    shift_start: str
+    shift_end: str
+    buffer_minutes: int
+    override_for_all: bool
+    note: Optional[str]
+    created_at: datetime
+
+
+class CreateOverrideRequest(BaseModel):
+    employee_id: Optional[int] = None   # None if override_for_all=True
+    override_date: str                  # YYYY-MM-DD
+    shift_start: str                    # HH:MM
+    shift_end: str                      # HH:MM
+    buffer_minutes: int = 30
+    override_for_all: bool = False
+    note: Optional[str] = None
 
 
 class TimeClockEntry(BaseModel):
     id: int
     employee_id: int
     employee_name: Optional[str] = None
-    department: Optional[str] = None
+    shift_date: str
     clock_in_at: datetime
     clock_out_at: Optional[datetime] = None
     total_minutes: Optional[float] = None
-    total_hours: Optional[float] = None  # total_minutes / 60 — computed
-    status: Optional[str] = None  # active / completed / incomplete — computed
+    total_hours: Optional[float] = None   # computed: total_minutes / 60
+    clock_in_status: str
+    clock_out_status: str
     notes: Optional[str] = None
     edited_by: Optional[str] = None
     created_at: datetime
+    # computed
+    is_night_shift: Optional[bool] = False  # clock_out date != clock_in date
 
 
 class ClockActionRequest(BaseModel):
@@ -90,61 +82,42 @@ class ClockActionRequest(BaseModel):
 
 
 class EditEntryRequest(BaseModel):
-    clock_in_at: Optional[str] = None
+    clock_in_at: Optional[str] = None   # ISO datetime string
     clock_out_at: Optional[str] = None
     notes: Optional[str] = None
-    edited_by: str
-
-    @field_validator('edited_by')
-    @classmethod
-    def edited_by_required(cls, v: str) -> str:
-        v = (v or '').strip()
-        if not v:
-            raise ValueError('edited_by is required')
-        return v
+    edited_by: str  # required
 
 
-class AnalyticsEmployeeEntry(BaseModel):
-    date: str
-    hours: float
-    status: str
+# Pay week: Thursday to Wednesday
+# Given any date, return the Thursday that starts the pay week
+def get_pay_week_start(d) -> date:
+    # weekday(): Monday=0, Thursday=3, Wednesday=2
+    days_since_thursday = (d.weekday() - 3) % 7
+    return d - timedelta(days=days_since_thursday)
 
 
-class AnalyticsByEmployee(BaseModel):
-    employee_id: int
-    employee_name: str
-    department: str
-    days_worked: int
-    total_hours: float
-    avg_hours_per_day: float
-    overtime_days: int
-    entries: list[AnalyticsEmployeeEntry]
+def get_pay_week_end(d) -> date:
+    return get_pay_week_start(d) + timedelta(days=6)
 
 
-class AnalyticsByDepartment(BaseModel):
-    department: str
-    department_label: str
-    total_hours: float
-    employee_count: int
+# Determine clock-in status given actual time and schedule
+def get_clock_in_status(actual_time, scheduled_start, buffer_minutes: int) -> str:
+    window_start = (datetime.combine(date.today(), scheduled_start) - timedelta(minutes=buffer_minutes)).time()
+    window_end   = (datetime.combine(date.today(), scheduled_start) + timedelta(minutes=buffer_minutes)).time()
+    if actual_time < window_start:
+        return 'early'
+    elif actual_time <= window_end:
+        return 'on_time'
+    else:
+        return 'late'
 
 
-class AnalyticsDailyTotal(BaseModel):
-    date: str
-    label: str
-    total_hours: float
-    employee_count: int
-
-
-class AnalyticsOvertimeAlert(BaseModel):
-    employee_name: str
-    period: str
-    total_hours: float
-    overtime_hours: float
-
-
-class AnalyticsSummary(BaseModel):
-    period_days: int
-    by_employee: list[AnalyticsByEmployee]
-    by_department: list[AnalyticsByDepartment]
-    daily_totals: list[AnalyticsDailyTotal]
-    overtime_alerts: list[AnalyticsOvertimeAlert]
+def get_clock_out_status(actual_time, scheduled_end, buffer_minutes: int) -> str:
+    window_start = (datetime.combine(date.today(), scheduled_end) - timedelta(minutes=buffer_minutes)).time()
+    window_end   = (datetime.combine(date.today(), scheduled_end) + timedelta(minutes=buffer_minutes)).time()
+    if actual_time < window_start:
+        return 'early'
+    elif actual_time <= window_end:
+        return 'on_time'
+    else:
+        return 'late'

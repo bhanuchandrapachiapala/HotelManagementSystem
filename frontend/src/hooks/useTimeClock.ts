@@ -5,19 +5,23 @@ import {
   getTodayRoster,
   getTimeEntries,
   getTimeClockAnalytics,
+  getEmployeeSchedules,
+  updateEmployeeSchedule,
+  createScheduleOverride,
+  deleteScheduleOverride,
   addTimeClockEmployee,
   updateTimeClockEmployee,
   editTimeEntry,
 } from '../lib/api'
-import type { Department } from '../types'
+import type { CreateOverrideRequest } from '../types'
 
 const STALE = 30000
 
-export function useTimeClockEmployees(includeInactive = false) {
+export function useTimeClockEmployees() {
   return useQuery({
-    queryKey: ['timeclock', 'employees', includeInactive],
-    queryFn: () => getTimeClockEmployees(includeInactive),
-    refetchInterval: 10000, // live timer / status updates
+    queryKey: ['timeclock', 'employees'],
+    queryFn: getTimeClockEmployees,
+    refetchInterval: 10000, // live status updates
   })
 }
 
@@ -25,7 +29,7 @@ export function useTodayRoster() {
   return useQuery({
     queryKey: ['timeclock', 'today'],
     queryFn: getTodayRoster,
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   })
 }
 
@@ -33,7 +37,6 @@ export function useTimeEntries(filters?: {
   employee_id?: number
   date_from?: string
   date_to?: string
-  department?: string
   limit?: number
   offset?: number
 }) {
@@ -44,10 +47,18 @@ export function useTimeEntries(filters?: {
   })
 }
 
-export function useTimeClockAnalytics(days = 7) {
+export function useTimeClockAnalytics(dateFrom?: string, dateTo?: string) {
   return useQuery({
-    queryKey: ['timeclock', 'analytics', days],
-    queryFn: () => getTimeClockAnalytics(days),
+    queryKey: ['timeclock', 'analytics', dateFrom ?? '', dateTo ?? ''],
+    queryFn: () => getTimeClockAnalytics(dateFrom, dateTo),
+    staleTime: STALE,
+  })
+}
+
+export function useEmployeeSchedules() {
+  return useQuery({
+    queryKey: ['timeclock', 'schedules'],
+    queryFn: getEmployeeSchedules,
     staleTime: STALE,
   })
 }
@@ -68,7 +79,8 @@ export function useClockAction() {
 export function useAddEmployee() {
   const invalidate = useInvalidateTimeClock()
   return useMutation({
-    mutationFn: (data: { name: string; department: Department }) => addTimeClockEmployee(data),
+    mutationFn: (data: { name: string; shift_start: string; shift_end: string; buffer_minutes: number }) =>
+      addTimeClockEmployee(data),
     onSuccess: invalidate,
   })
 }
@@ -76,13 +88,38 @@ export function useAddEmployee() {
 export function useUpdateEmployee() {
   const invalidate = useInvalidateTimeClock()
   return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { name?: string; is_active?: boolean } }) =>
+      updateTimeClockEmployee(id, data),
+    onSuccess: invalidate,
+  })
+}
+
+export function useUpdateEmployeeSchedule() {
+  const invalidate = useInvalidateTimeClock()
+  return useMutation({
     mutationFn: ({
-      id,
+      employeeId,
       data,
     }: {
-      id: number
-      data: { name?: string; department?: Department; is_active?: boolean }
-    }) => updateTimeClockEmployee(id, data),
+      employeeId: number
+      data: { shift_start: string; shift_end: string; buffer_minutes: number }
+    }) => updateEmployeeSchedule(employeeId, data),
+    onSuccess: invalidate,
+  })
+}
+
+export function useCreateScheduleOverride() {
+  const invalidate = useInvalidateTimeClock()
+  return useMutation({
+    mutationFn: (data: CreateOverrideRequest) => createScheduleOverride(data),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteScheduleOverride() {
+  const invalidate = useInvalidateTimeClock()
+  return useMutation({
+    mutationFn: (overrideId: number) => deleteScheduleOverride(overrideId),
     onSuccess: invalidate,
   })
 }
