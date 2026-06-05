@@ -152,64 +152,71 @@ def _shape_override(o: dict) -> dict:
 
 @router.get('/employees')
 def list_employees(include_inactive: bool = Query(default=False)):
-    db = get_supabase()
-    now = _now_eastern()
-    today_iso = now.date().isoformat()
+    try:
+        db = get_supabase()
+        now = _now_eastern()
+        today_iso = now.date().isoformat()
 
-    emp_query = (
-        db.table('time_clock_employees')
-        .select('*, employee_schedules(shift_start, shift_end, buffer_minutes)')
-        .order('name')
-    )
-    if not include_inactive:
-        emp_query = emp_query.eq('is_active', True)
-    emps = emp_query.execute().data or []
+        # 1) employees
+        emp_query = db.table('time_clock_employees').select('*').order('name')
+        if not include_inactive:
+            emp_query = emp_query.eq('is_active', True)
+        emps = emp_query.execute().data or []
 
-    open_rows = (
-        db.table('time_clock_entries').select('*').is_('clock_out_at', 'null').execute().data or []
-    )
-    open_by_emp = {r['employee_id']: r for r in open_rows}
+        # 2) schedules — fetched separately (nested embeds are unreliable here)
+        sched_rows = db.table('employee_schedules').select('*').execute().data or []
+        sched_by_emp = {s['employee_id']: s for s in sched_rows}
 
-    today_rows = (
-        db.table('time_clock_entries').select('*').eq('shift_date', today_iso).execute().data or []
-    )
-    today_by_emp: dict[int, list] = {}
-    for r in today_rows:
-        today_by_emp.setdefault(r['employee_id'], []).append(r)
-
-    result = []
-    for e in emps:
-        sched_list = e.pop('employee_schedules', None) or []
-        sched = sched_list[0] if sched_list else DEFAULT_SCHEDULE
-        open_r = open_by_emp.get(e['id'])
-
-        mins = sum(
-            float(r['total_minutes'])
-            for r in today_by_emp.get(e['id'], [])
-            if r.get('total_minutes') is not None
+        # 3) open entries (any date — catches night-shift workers)
+        open_rows = (
+            db.table('time_clock_entries').select('*').is_('clock_out_at', 'null').execute().data or []
         )
-        live = 0.0
-        if open_r and str(open_r['shift_date']) == today_iso:
-            ci = _parse_dt(open_r['clock_in_at']).astimezone(EASTERN)
-            live = max(0.0, (now - ci).total_seconds() / 60)
-        hours_today = round((mins + live) / 60, 2)
+        open_by_emp = {r['employee_id']: r for r in open_rows}
 
-        result.append({
-            'id': e['id'],
-            'name': e['name'],
-            'is_active': e['is_active'],
-            'created_at': e['created_at'],
-            'shift_start': _fmt_time(sched['shift_start']),
-            'shift_end': _fmt_time(sched['shift_end']),
-            'buffer_minutes': sched['buffer_minutes'],
-            'is_clocked_in': open_r is not None,
-            'current_entry_id': open_r['id'] if open_r else None,
-            'clocked_in_at': open_r['clock_in_at'] if open_r else None,
-            'hours_today': hours_today,
-            'clock_in_status': open_r['clock_in_status'] if open_r else None,
-        })
+        # today's entries (for hours_today)
+        today_rows = (
+            db.table('time_clock_entries').select('*').eq('shift_date', today_iso).execute().data or []
+        )
+        today_by_emp: dict[int, list] = {}
+        for r in today_rows:
+            today_by_emp.setdefault(r['employee_id'], []).append(r)
 
-    return {'employees': result}
+        # 4) merge in Python
+        result = []
+        for e in emps:
+            sched = sched_by_emp.get(e['id'], DEFAULT_SCHEDULE)
+            open_r = open_by_emp.get(e['id'])
+
+            mins = sum(
+                float(r['total_minutes'])
+                for r in today_by_emp.get(e['id'], [])
+                if r.get('total_minutes') is not None
+            )
+            live = 0.0
+            if open_r and str(open_r['shift_date']) == today_iso:
+                ci = _parse_dt(open_r['clock_in_at']).astimezone(EASTERN)
+                live = max(0.0, (now - ci).total_seconds() / 60)
+            hours_today = round((mins + live) / 60, 2)
+
+            result.append({
+                'id': e['id'],
+                'name': e['name'],
+                'is_active': e['is_active'],
+                'created_at': e['created_at'],
+                'shift_start': _fmt_time(sched['shift_start']),
+                'shift_end': _fmt_time(sched['shift_end']),
+                'buffer_minutes': sched['buffer_minutes'],
+                'is_clocked_in': open_r is not None,
+                'current_entry_id': open_r['id'] if open_r else None,
+                'clocked_in_at': open_r['clock_in_at'] if open_r else None,
+                'hours_today': hours_today,
+                'clock_in_status': open_r['clock_in_status'] if open_r else None,
+            })
+
+        return {'employees': result}
+    except Exception as e:
+        print(f"[timeclock employees error] {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load employees: {e}")
 
 
 # ── POST /clock — toggle in/out ───────────────────────────────────────────────
