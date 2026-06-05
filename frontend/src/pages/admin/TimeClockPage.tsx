@@ -33,7 +33,7 @@ import {
   useEditEntry,
 } from '../../hooks/useTimeClock'
 import { getToday, cn } from '../../lib/utils'
-import type { TimeClockEmployee, TimeClockEntry, ScheduleRow, TimeClockAnalytics } from '../../types'
+import type { TimeClockEmployee, TimeClockEntry, ScheduleRow, ScheduleOverride, TimeClockAnalytics } from '../../types'
 
 type EmpAnalytics = TimeClockAnalytics['by_employee'][number]
 
@@ -219,7 +219,7 @@ function ClockTab() {
         >
           Manage Staff &amp; Schedules {showManage ? '▴' : '▾'}
         </button>
-        {showManage && <ManagePanel schedules={schedules} />}
+        {showManage && <ManagePanel employees={employees} overrides={schedData?.overrides ?? []} />}
       </SectionCard>
 
       {/* Clock grid */}
@@ -338,14 +338,13 @@ function ClockTab() {
 
 // ── Manage Staff & Schedules panel ──────────────────────────────────────────
 
-function ManagePanel({ schedules }: { schedules: ScheduleRow[] }) {
+function ManagePanel({ employees, overrides }: { employees: TimeClockEmployee[]; overrides: ScheduleOverride[] }) {
   const addEmp = useAddEmployee()
   const updateEmp = useUpdateEmployee()
   const updateSched = useUpdateEmployeeSchedule()
   const createOverride = useCreateScheduleOverride()
   const deleteOverride = useDeleteScheduleOverride()
-  const { data: schedData } = useEmployeeSchedules()
-  const overrideList = schedData?.overrides ?? []
+  const overrideList = overrides
 
   const [newName, setNewName] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
@@ -394,11 +393,11 @@ function ManagePanel({ schedules }: { schedules: ScheduleRow[] }) {
     }
   }
 
-  function startEdit(s: ScheduleRow) {
-    setEditId(s.employee_id)
-    setEStart(s.shift_start)
-    setEEnd(s.shift_end)
-    setEBuffer(s.buffer_minutes)
+  function startEdit(s: TimeClockEmployee) {
+    setEditId(s.id)
+    setEStart(s.shift_start ?? '09:00')
+    setEEnd(s.shift_end ?? '16:00')
+    setEBuffer(s.buffer_minutes ?? 30)
   }
 
   async function saveSchedule(employeeId: number) {
@@ -450,7 +449,7 @@ function ManagePanel({ schedules }: { schedules: ScheduleRow[] }) {
   }
 
   const nameFor = (id?: number | null) =>
-    id == null ? 'All Employees' : schedules.find((s) => s.employee_id === id)?.name ?? `#${id}`
+    id == null ? 'All Employees' : employees.find((s) => s.id === id)?.name ?? `#${id}`
 
   return (
     <div className="mt-4 space-y-6">
@@ -491,32 +490,32 @@ function ManagePanel({ schedules }: { schedules: ScheduleRow[] }) {
               </tr>
             </thead>
             <tbody>
-              {schedules.map((s) => (
-                <Fragment key={s.employee_id}>
+              {employees.map((s) => (
+                <Fragment key={s.id}>
                   <tr className="border-t border-gray-100">
                     <td className="px-4 py-3 font-semibold text-brand-black">{s.name}</td>
                     <td className="px-4 py-3 text-gray-600">{fmtClock(s.shift_start)} – {fmtClock(s.shift_end)}</td>
-                    <td className="px-4 py-3 text-gray-600">{s.buffer_minutes} min</td>
+                    <td className="px-4 py-3 text-gray-600">{s.buffer_minutes ?? 30} min</td>
                     <td className="px-4 py-3">
-                      {confirmDeactivate === s.employee_id ? (
+                      {confirmDeactivate === s.id ? (
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-red font-semibold">Deactivate?</span>
-                          <button type="button" onClick={() => deactivate(s.employee_id)} className="text-xs font-bold text-white bg-red px-2 py-1 rounded-[6px]">Yes</button>
+                          <button type="button" onClick={() => deactivate(s.id)} className="text-xs font-bold text-white bg-red px-2 py-1 rounded-[6px]">Yes</button>
                           <button type="button" onClick={() => setConfirmDeactivate(null)} className="text-xs font-semibold text-gray-400">Cancel</button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
-                          <button type="button" onClick={() => (editId === s.employee_id ? setEditId(null) : startEdit(s))} className="text-gray-300 hover:text-orange transition-colors" aria-label="Edit schedule">
+                          <button type="button" onClick={() => (editId === s.id ? setEditId(null) : startEdit(s))} className="text-gray-300 hover:text-orange transition-colors" aria-label="Edit schedule">
                             <Pencil size={15} />
                           </button>
-                          <button type="button" onClick={() => setConfirmDeactivate(s.employee_id)} className="text-gray-300 hover:text-red transition-colors" aria-label="Deactivate">
+                          <button type="button" onClick={() => setConfirmDeactivate(s.id)} className="text-gray-300 hover:text-red transition-colors" aria-label="Deactivate">
                             <Trash2 size={15} />
                           </button>
                         </div>
                       )}
                     </td>
                   </tr>
-                  {editId === s.employee_id && (
+                  {editId === s.id && (
                     <tr className="bg-gray-50/70 border-t border-gray-100">
                       <td colSpan={4} className="px-4 py-4">
                         <div className="flex flex-wrap items-end gap-3">
@@ -532,7 +531,7 @@ function ManagePanel({ schedules }: { schedules: ScheduleRow[] }) {
                             <label className="block text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1.5">Buffer (min)</label>
                             <input type="number" min={0} max={60} value={eBuffer} onChange={(e) => setEBuffer(Number(e.target.value))} className={cn(inputCls, 'w-24')} />
                           </div>
-                          <button type="button" onClick={() => saveSchedule(s.employee_id)} disabled={updateSched.isPending} className="bg-orange hover:bg-orange-dark text-white font-semibold rounded-[10px] px-5 py-2 text-sm transition-colors disabled:opacity-40">
+                          <button type="button" onClick={() => saveSchedule(s.id)} disabled={updateSched.isPending} className="bg-orange hover:bg-orange-dark text-white font-semibold rounded-[10px] px-5 py-2 text-sm transition-colors disabled:opacity-40">
                             {updateSched.isPending ? 'Saving…' : 'Save Permanently'}
                           </button>
                         </div>
@@ -541,7 +540,7 @@ function ManagePanel({ schedules }: { schedules: ScheduleRow[] }) {
                   )}
                 </Fragment>
               ))}
-              {schedules.length === 0 && (
+              {employees.length === 0 && (
                 <tr><td colSpan={4} className="px-4 py-3 text-xs text-gray-400">No active employees.</td></tr>
               )}
             </tbody>
@@ -592,7 +591,7 @@ function ManagePanel({ schedules }: { schedules: ScheduleRow[] }) {
               <label className="block text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1.5">Apply To</label>
               <select value={ovApplyTo} onChange={(e) => setOvApplyTo(e.target.value)} className={inputCls}>
                 <option value="all">All Employees</option>
-                {schedules.map((s) => <option key={s.employee_id} value={s.employee_id}>{s.name}</option>)}
+                {employees.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>

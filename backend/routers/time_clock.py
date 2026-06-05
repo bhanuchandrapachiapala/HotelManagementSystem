@@ -569,49 +569,57 @@ def get_analytics(date_from: str = Query(default=None), date_to: str = Query(def
 
 @router.get('/schedules')
 def get_schedules():
-    db = get_supabase()
-    today = _now_eastern().date()
-    today_iso = today.isoformat()
+    try:
+        db = get_supabase()
+        today = _now_eastern().date()
+        today_iso = today.isoformat()
 
-    emps = (
-        db.table('time_clock_employees')
-        .select('*, employee_schedules(shift_start, shift_end, buffer_minutes)')
-        .eq('is_active', True)
-        .order('name')
-        .execute()
-        .data or []
-    )
-
-    overrides = (
-        db.table('schedule_overrides')
-        .select('*')
-        .gte('override_date', today_iso)
-        .order('override_date')
-        .execute()
-        .data or []
-    )
-    shaped_overrides = [_shape_override(o) for o in overrides]
-
-    schedules = []
-    for e in emps:
-        sched_list = e.pop('employee_schedules', None) or []
-        sched = sched_list[0] if sched_list else DEFAULT_SCHEDULE
-        today_override = next(
-            (o for o in shaped_overrides
-             if o['override_date'] == today_iso
-             and (o['employee_id'] == e['id'] or o['override_for_all'])),
-            None,
+        # 1) employees
+        emps = (
+            db.table('time_clock_employees')
+            .select('*')
+            .eq('is_active', True)
+            .order('name')
+            .execute()
+            .data or []
         )
-        schedules.append({
-            'employee_id': e['id'],
-            'name': e['name'],
-            'shift_start': _fmt_time(sched['shift_start']),
-            'shift_end': _fmt_time(sched['shift_end']),
-            'buffer_minutes': sched['buffer_minutes'],
-            'today_override': today_override,
-        })
 
-    return {'schedules': schedules, 'overrides': shaped_overrides}
+        # 2) schedules — separate query, merged in Python (no nested embed)
+        sched_rows = db.table('employee_schedules').select('*').execute().data or []
+        sched_by_emp = {s['employee_id']: s for s in sched_rows}
+
+        overrides = (
+            db.table('schedule_overrides')
+            .select('*')
+            .gte('override_date', today_iso)
+            .order('override_date')
+            .execute()
+            .data or []
+        )
+        shaped_overrides = [_shape_override(o) for o in overrides]
+
+        schedules = []
+        for e in emps:
+            sched = sched_by_emp.get(e['id'], DEFAULT_SCHEDULE)
+            today_override = next(
+                (o for o in shaped_overrides
+                 if o['override_date'] == today_iso
+                 and (o['employee_id'] == e['id'] or o['override_for_all'])),
+                None,
+            )
+            schedules.append({
+                'employee_id': e['id'],
+                'name': e['name'],
+                'shift_start': _fmt_time(sched['shift_start']),
+                'shift_end': _fmt_time(sched['shift_end']),
+                'buffer_minutes': sched['buffer_minutes'],
+                'today_override': today_override,
+            })
+
+        return {'schedules': schedules, 'overrides': shaped_overrides}
+    except Exception as e:
+        print(f"[timeclock schedules error] {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load schedules: {e}")
 
 
 # ── PATCH /employees/{employee_id}/schedule ───────────────────────────────────
