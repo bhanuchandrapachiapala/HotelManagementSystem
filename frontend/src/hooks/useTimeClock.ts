@@ -17,10 +17,10 @@ import type { CreateOverrideRequest } from '../types'
 
 const STALE = 30000
 
-export function useTimeClockEmployees() {
+export function useTimeClockEmployees(includeInactive = false) {
   return useQuery({
-    queryKey: ['timeclock', 'employees'],
-    queryFn: getTimeClockEmployees,
+    queryKey: ['timeclock', 'employees', includeInactive],
+    queryFn: () => getTimeClockEmployees(includeInactive),
     refetchInterval: 10000, // live status updates
   })
 }

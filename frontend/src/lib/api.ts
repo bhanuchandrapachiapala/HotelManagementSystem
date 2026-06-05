@@ -128,8 +128,9 @@ export function submitFrontDeskChecklist(date: string, taskIds: string[]): Promi
 }
 
 // Time Clock
-export function getTimeClockEmployees(): Promise<{ employees: TimeClockEmployee[] }> {
-  return apiFetch('/api/timeclock/employees')
+export function getTimeClockEmployees(includeInactive = false): Promise<{ employees: TimeClockEmployee[] }> {
+  const qs = includeInactive ? '?include_inactive=true' : ''
+  return apiFetch(`/api/timeclock/employees${qs}`)
 }
 
 export function clockAction(employeeId: number): Promise<{

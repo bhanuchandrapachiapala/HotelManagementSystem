@@ -151,19 +151,19 @@ def _shape_override(o: dict) -> dict:
 # ── GET /employees ─────────────────────────────────────────────────────────────
 
 @router.get('/employees')
-def list_employees():
+def list_employees(include_inactive: bool = Query(default=False)):
     db = get_supabase()
     now = _now_eastern()
     today_iso = now.date().isoformat()
 
-    emps = (
+    emp_query = (
         db.table('time_clock_employees')
         .select('*, employee_schedules(shift_start, shift_end, buffer_minutes)')
-        .eq('is_active', True)
         .order('name')
-        .execute()
-        .data or []
     )
+    if not include_inactive:
+        emp_query = emp_query.eq('is_active', True)
+    emps = emp_query.execute().data or []
 
     open_rows = (
         db.table('time_clock_entries').select('*').is_('clock_out_at', 'null').execute().data or []

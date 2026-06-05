@@ -355,6 +355,18 @@ function ManagePanel({ schedules }: { schedules: ScheduleRow[] }) {
   const [confirmDeactivate, setConfirmDeactivate] = useState<number | null>(null)
   const [showInactive, setShowInactive] = useState(false)
 
+  const { data: allEmpData } = useTimeClockEmployees(true)
+  const inactiveEmployees = (allEmpData?.employees ?? []).filter((e) => !e.is_active)
+
+  async function restore(id: number) {
+    try {
+      await updateEmp.mutateAsync({ id, data: { is_active: true } })
+      toast.success('Employee restored')
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to restore')
+    }
+  }
+
   // Override form
   const [showOverrideForm, setShowOverrideForm] = useState(false)
   const [ovDate, setOvDate] = useState(getToday())
@@ -539,7 +551,25 @@ function ManagePanel({ schedules }: { schedules: ScheduleRow[] }) {
           {showInactive ? 'Hide inactive' : 'Show inactive'}
         </button>
         {showInactive && (
-          <p className="text-xs text-gray-400 mt-2">Deactivated employees are removed from the roster and reporting.</p>
+          <div className="mt-3 space-y-2">
+            {inactiveEmployees.length === 0 ? (
+              <p className="text-xs text-gray-400">No inactive employees.</p>
+            ) : (
+              inactiveEmployees.map((emp) => (
+                <div key={emp.id} className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-[10px] opacity-70">
+                  <span className="flex-1 text-sm text-gray-400 line-through">{emp.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => restore(emp.id)}
+                    disabled={updateEmp.isPending}
+                    className="text-xs font-bold text-orange hover:text-orange-dark transition-colors disabled:opacity-50"
+                  >
+                    Restore
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         )}
       </div>
 
