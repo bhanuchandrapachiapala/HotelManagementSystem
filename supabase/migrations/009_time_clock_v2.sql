@@ -60,6 +60,9 @@ CREATE TABLE time_clock_entries (
   edited_by       TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT valid_clock_in_status  CHECK (clock_in_status  IN ('early','on_time','late','manual')),
+  -- NOTE: 'auto' (used by GET /api/timeclock/auto-clockout) is added to this
+  -- constraint in migration 010_auto_clockout_status.sql. Until that runs, the
+  -- backend falls back to writing 'late' for auto clock-outs.
   CONSTRAINT valid_clock_out_status CHECK (clock_out_status IN ('early','on_time','late','pending','manual'))
 );
 

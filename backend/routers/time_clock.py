@@ -57,6 +57,31 @@ def _fmt_time(t) -> str:
     return f"{tt.hour:02d}:{tt.minute:02d}"
 
 
+def _fmt_ampm(t: dt.time) -> str:
+    """'09:00' time → '9:00 AM' for human-readable messages."""
+    period = 'PM' if t.hour >= 12 else 'AM'
+    hr = t.hour % 12 or 12
+    return f"{hr}:{t.minute:02d} {period}"
+
+
+def _shift_time(base: dt.time, delta_min: int) -> dt.time:
+    """base time shifted by delta_min, wrapping around midnight."""
+    total = (base.hour * 60 + base.minute + delta_min) % (24 * 60)
+    return dt.time(total // 60, total % 60)
+
+
+def _within_window(now_t: dt.time, base: dt.time, buffer_min: int) -> bool:
+    """Is now_t within ±buffer of base (time-of-day, midnight-safe)?"""
+    now_min = now_t.hour * 60 + now_t.minute
+    base_min = base.hour * 60 + base.minute
+    diff = now_min - base_min
+    if diff > 720:
+        diff -= 1440
+    elif diff < -720:
+        diff += 1440
+    return abs(diff) <= buffer_min
+
+
 def get_effective_schedule(db, employee_id: int, check_date: dt.date) -> dict:
     """Resolve the schedule in effect for an employee on a given date.
 
@@ -247,7 +272,16 @@ def clock_action(body: ClockActionRequest):
         # ── clocking IN ──
         today = now.date()
         sched = get_effective_schedule(db, body.employee_id, today)
-        status = get_clock_in_status(now.time(), _parse_time(sched['shift_start']), sched['buffer_minutes'])
+        start_t = _parse_time(sched['shift_start'])
+        buf = sched['buffer_minutes']
+        if not _within_window(now.time(), start_t, buf):
+            ws = _fmt_ampm(_shift_time(start_t, -buf))
+            we = _fmt_ampm(_shift_time(start_t, buf))
+            raise HTTPException(
+                status_code=400,
+                detail=f"Clock-in not allowed. Your shift starts at {_fmt_ampm(start_t)}. You can clock in between {ws} and {we}.",
+            )
+        status = get_clock_in_status(now.time(), start_t, buf)
         inserted = (
             db.table('time_clock_entries')
             .insert({
@@ -271,7 +305,16 @@ def clock_action(body: ClockActionRequest):
     entry = open_entries[0]
     shift_date = _parse_dt(entry['clock_in_at']).astimezone(EASTERN).date()
     sched = get_effective_schedule(db, body.employee_id, shift_date)
-    status = get_clock_out_status(now.time(), _parse_time(sched['shift_end']), sched['buffer_minutes'])
+    end_t = _parse_time(sched['shift_end'])
+    buf = sched['buffer_minutes']
+    if not _within_window(now.time(), end_t, buf):
+        ws = _fmt_ampm(_shift_time(end_t, -buf))
+        we = _fmt_ampm(_shift_time(end_t, buf))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Clock-out not allowed. Your shift ends at {_fmt_ampm(end_t)}. You can clock out between {ws} and {we}.",
+        )
+    status = get_clock_out_status(now.time(), end_t, buf)
 
     db.table('time_clock_entries').update({
         'clock_out_at': now_utc,
@@ -295,6 +338,70 @@ def clock_action(body: ClockActionRequest):
         'total_hours': total_hours,
         'is_night_shift': shaped['is_night_shift'],
     }
+
+
+# ── GET /auto-clockout — close out overdue open shifts ────────────────────────
+# Intended to be hit by a scheduled job (cron) but is safe to trigger manually.
+
+@router.get('/auto-clockout')
+def auto_clockout():
+    try:
+        db = get_supabase()
+        now = _now_eastern()
+
+        open_rows = (
+            db.table('time_clock_entries').select('*').is_('clock_out_at', 'null').execute().data or []
+        )
+
+        clocked_out = []
+        for entry in open_rows:
+            shift_date = _parse_dt(entry['clock_in_at']).astimezone(EASTERN).date()
+            sched = get_effective_schedule(db, entry['employee_id'], shift_date)
+            start_t = _parse_time(sched['shift_start'])
+            end_t = _parse_time(sched['shift_end'])
+            buf = sched['buffer_minutes']
+
+            # night shift (end <= start) ends on the following calendar day
+            end_date = shift_date
+            if (end_t.hour * 60 + end_t.minute) <= (start_t.hour * 60 + start_t.minute):
+                end_date = shift_date + dt.timedelta(days=1)
+            end_dt = dt.datetime.combine(end_date, end_t, tzinfo=EASTERN)
+            threshold = end_dt + dt.timedelta(minutes=buf)
+
+            if now <= threshold:
+                continue  # shift end + buffer has not passed yet
+
+            # auto clock out AT the scheduled shift_end (not the current time)
+            clock_in_dt = _parse_dt(entry['clock_in_at'])
+            out_dt = end_dt
+            if out_dt <= clock_in_dt:
+                out_dt = clock_in_dt + dt.timedelta(minutes=1)
+            out_utc = out_dt.astimezone(dt.timezone.utc).isoformat()
+
+            # 'auto' may not be in the DB check constraint yet — fall back to 'late'
+            try:
+                db.table('time_clock_entries').update(
+                    {'clock_out_at': out_utc, 'clock_out_status': 'auto'}
+                ).eq('id', entry['id']).execute()
+                status = 'auto'
+            except Exception as ce:
+                print(f"[auto-clockout] 'auto' status rejected, falling back to 'late': {ce}")
+                db.table('time_clock_entries').update(
+                    {'clock_out_at': out_utc, 'clock_out_status': 'late'}
+                ).eq('id', entry['id']).execute()
+                status = 'late'
+
+            clocked_out.append({
+                'entry_id': entry['id'],
+                'employee_id': entry['employee_id'],
+                'clock_out_at': out_utc,
+                'clock_out_status': status,
+            })
+
+        return {'auto_clocked_out': len(clocked_out), 'entries': clocked_out}
+    except Exception as e:
+        print(f"[timeclock auto-clockout error] {e}")
+        raise HTTPException(status_code=500, detail=f"Auto clock-out failed: {e}")
 
 
 # ── GET /today — roster ────────────────────────────────────────────────────────

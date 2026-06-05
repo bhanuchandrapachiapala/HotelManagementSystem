@@ -127,6 +127,34 @@ function predictStatus(now: Date, hhmm: string | undefined, buffer: number): 'ea
   return 'late'
 }
 
+// shift a "HH:MM" time-of-day by deltaMin, wrapping around midnight
+function shiftHHMM(hhmm: string | undefined, deltaMin: number): string {
+  if (!hhmm) return ''
+  const [h, m] = hhmm.split(':').map(Number)
+  let total = (h * 60 + m + deltaMin) % 1440
+  if (total < 0) total += 1440
+  return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`
+}
+
+// "8:30 AM – 9:30 AM" window around a base time ± buffer
+function windowRange(hhmm: string | undefined, buffer: number): string {
+  return `${fmtClock(shiftHHMM(hhmm, -buffer))} – ${fmtClock(shiftHHMM(hhmm, buffer))}`
+}
+
+// where `now` sits relative to a ±buffer window around a time-of-day
+function windowRelation(now: Date, hhmm: string | undefined, buffer: number): 'before' | 'within' | 'after' {
+  if (!hhmm) return 'before'
+  const [h, m] = hhmm.split(':').map(Number)
+  const baseMin = h * 60 + m
+  const nowMin = now.getHours() * 60 + now.getMinutes()
+  let diff = nowMin - baseMin
+  if (diff > 720) diff -= 1440
+  else if (diff < -720) diff += 1440
+  if (diff < -buffer) return 'before'
+  if (diff > buffer) return 'after'
+  return 'within'
+}
+
 // ── status badge ───────────────────────────────────────────────────────────
 
 const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
@@ -178,6 +206,13 @@ function ClockTab() {
 
   const [showManage, setShowManage] = useState(false)
   const [confirm, setConfirm] = useState<{ id: number; type: 'in' | 'out' } | null>(null)
+  const [blocked, setBlocked] = useState<{ id: number; message: string } | null>(null)
+
+  useEffect(() => {
+    if (!blocked) return
+    const t = setTimeout(() => setBlocked(null), 5000)
+    return () => clearTimeout(t)
+  }, [blocked])
 
   const employees = empData?.employees ?? []
   const schedules = schedData?.schedules ?? []
@@ -189,6 +224,7 @@ function ClockTab() {
 
   async function handleClock(emp: TimeClockEmployee) {
     setConfirm(null)
+    setBlocked(null)
     try {
       const res = await clock.mutateAsync(emp.id)
       if (res.action === 'clocked_in') {
@@ -197,7 +233,8 @@ function ClockTab() {
         toast.success(`${emp.name} clocked out — ${formatHM(res.total_hours ?? 0)}${res.is_night_shift ? ' 🌙' : ''}`)
       }
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Clock action failed')
+      // Surface the backend's exact window message in an inline warning box
+      setBlocked({ id: emp.id, message: e instanceof Error ? e.message : 'Clock action failed' })
     }
   }
 
@@ -236,9 +273,11 @@ function ClockTab() {
             const ov = sched?.today_override ?? null
             const effStart = ov?.shift_start ?? emp.shift_start
             const effEnd = ov?.shift_end ?? emp.shift_end
+            const effBuffer = ov?.buffer_minutes ?? emp.buffer_minutes ?? 30
             const elapsed = emp.clocked_in_at ? hoursSince(emp.clocked_in_at, now) : 0
             const longShift = emp.is_clocked_in && elapsed > 8
             const isConfirming = confirm?.id === emp.id
+            const clockInRel = windowRelation(new Date(now), effStart, effBuffer)
 
             return (
               <div
@@ -265,6 +304,7 @@ function ClockTab() {
                       {emp.clock_in_status && <StatusPill status={emp.clock_in_status} />}
                     </div>
                     <p className="text-xs text-gray-400 mt-2">Expected out at {fmtClock(effEnd)}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Clock-out window: {windowRange(effEnd, effBuffer)}</p>
                   </div>
                 ) : (
                   <div className="mb-4">
@@ -274,6 +314,11 @@ function ClockTab() {
                     )}
                     {emp.hours_today > 0 && (
                       <p className="text-xs text-gray-400 mt-0.5">Worked {formatHM(emp.hours_today)} earlier</p>
+                    )}
+                    {clockInRel === 'after' ? (
+                      <p className="text-xs text-red font-semibold mt-0.5">Outside clock window</p>
+                    ) : (
+                      <p className="text-xs text-gray-400 mt-0.5">Clock-in window: {windowRange(effStart, effBuffer)}</p>
                     )}
                   </div>
                 )}
@@ -326,6 +371,12 @@ function ClockTab() {
                   >
                     Clock In
                   </button>
+                )}
+
+                {blocked?.id === emp.id && (
+                  <div className="mt-3 rounded-[10px] bg-orange-light border border-orange/30 text-orange-dark text-xs font-semibold px-3 py-2.5">
+                    {blocked.message}
+                  </div>
                 )}
               </div>
             )
